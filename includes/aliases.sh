@@ -1,6 +1,7 @@
 # https://raw.github.com/mathiasbynens/dotfiles/master/.aliases
 
 # dotfiles
+alias dot="$HOME/.dotfiles/bin/dot-install"
 
 # Easier navigation: .. and -
 alias ..="cd .."
@@ -10,7 +11,8 @@ alias g="git"
 alias dev="cd ~/Developer"
 alias code="code-insiders"
 alias grep='GREP_COLOR="1;37;45" LANG=C grep --color=auto'
-alias zshconfig="code ~/.zshrc"
+alias zshconf ="code ~/.zshrc"
+alias ohmy="source ~/.zshrc"
 alias ohmyzsh="code ~/.oh-my-zsh"
 # alias l='colorls --group-directories-first --almost-all'
 # alias ll='colorls --group-directories-first --almost-all --long' # detailed list view
