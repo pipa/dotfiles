@@ -8,4 +8,4 @@ else
     grep -q "\.dotfiles/bashrc" $HOME/.bashrc || echo "source ~/.dotfiles/bashrc" >> $HOME/.bashrc
 fi
 
-$HOME/.dotfiles/dotfiles/bin/dot-link-files
+$HOME/.dotfiles/bin/dot-link-files

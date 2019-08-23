@@ -293,7 +293,7 @@
 " }
 
 " fzf {
-    set runtimepath+=~/.dotfiles/dotfiles/fzf
+    " set runtimepath+=~/.dotfiles/fzf
 
     nnoremap <leader>f :Files<CR>
     nnoremap <leader>b :Buffers<CR>
