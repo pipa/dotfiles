@@ -1,6 +1,27 @@
-# [action keyword]: (If applied, this commit will...) <subject> (Max 50 char)
-# |<----  Using a Maximum Of 50 Characters  ---->|
-[] 
+:gitmoji: <type>(<scope>): <short summary>
 
-# Why was this change made?
-# |<----   Try To Limit Each Line to a Maximum Of 72 Characters   ---->|
+# Commit message subject line should be under 50 characters
+# Commit message body line length should be wrapped at 72 characters
+
+# Gitmoji is an emoji that represents the purpose of the commit.
+# See https://gitmoji.dev/ for a full list of Gitmojis and their meanings.
+
+# Type can be one of the following (with corresponding Gitmoji):
+#   feat     (new feature)                                                                    :sparkles:
+#   fix      (bug fix)                                                                        :bug:
+#   refactor (refactoring code)                                                               :recycle:
+#   style    (formatting, missing semi colons, etc; no code change)                           :art:
+#   docs     (changes to documentation)                                                       :book:
+#   test     (adding or refactoring tests; no production code change)                         :white_check_mark:
+#   chore    (updating build tasks, package manager configs, etc; no production code change)  :wrench:
+
+# Scope is the part/module of the codebase affected by the change
+# (optional; can be omitted for a small, general change)
+
+Body: <More detailed explanatory text, if necessary.>
+
+# The body should explain what the commit does and why you
+# made the change. You can use multiple paragraphs, and you
+# can use markdown formatting.
+
+Issue: <Link to the related issue or task (optional)>
