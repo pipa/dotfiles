@@ -35,7 +35,7 @@ fi
 # Install Claude Code
 if ! command -v claude &> /dev/null; then
     echo "Installing Claude Code..."
-    brew install anthropic-sdk-cli
+    brew install claude
 fi
 
 # Install Doppler CLI

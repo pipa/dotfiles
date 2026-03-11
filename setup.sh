@@ -136,7 +136,7 @@ fi
 if ! command -v claude &> /dev/null; then
     echo "Installing Claude Code..."
     if [[ "$OS" == "Darwin" ]]; then
-        brew install anthropic-sdk-cli
+        brew install claude
     else
         curl -sSL https://github.com/anthropics/anthropic-sdk-cli/releases/latest/download/anthropic-sdk-cli-linux-x64.tar.gz | tar xz -C /tmp
         sudo mv /tmp/anthropic-sdk-cli /usr/local/bin/claude
