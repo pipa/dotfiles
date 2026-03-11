@@ -1,5 +1,5 @@
 tap "anthropic-sdk-cli"
-tap "dopplerhq/cli"
+tap "dopplerhq/cli/doppler"
 
 # Core
 brew "git"
@@ -41,8 +41,8 @@ brew "docker"
 brew "docker-compose"
 brew "docker-buildx"
 
-# Neovim
-cask "neovim-nightly"
+# Neovim (use stable, nightly can be installed separately)
+brew "neovim"
 
 # Claude Code & Doppler
 cask "anthropic-sdk-cli"

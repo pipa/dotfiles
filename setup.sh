@@ -108,9 +108,18 @@ fi
 
 # Install Neovim nightly
 if [[ "$OS" == "Darwin" ]]; then
-    if ! command -v nvim &> /dev/null || [[ "$(nvim --version | head -1)" != *"nightly"* ]]; then
-        echo "Installing Neovim nightly..."
-        brew install --cask neovim-nightly || brew install neovim-nightly
+    if ! command -v nvim &> /dev/null; then
+        echo "Installing Neovim..."
+        # Try nightly first, fallback to stable
+        if brew install --cask neovim-nightly 2>/dev/null; then
+            echo "Installed Neovim nightly"
+        else
+            echo "Falling back to stable Neovim..."
+            brew install neovim
+        fi
+    elif [[ "$(nvim --version | head -1)" != *"0.10"* ]] && [[ "$(nvim --version | head -1)" != *"nightly"* ]]; then
+        echo "Upgrading Neovim..."
+        brew install --cask neovim-nightly 2>/dev/null || brew upgrade neovim
     fi
 fi
 

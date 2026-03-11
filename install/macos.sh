@@ -25,9 +25,12 @@ else
         gh lazygit btop zoxide tldr git-delta node
 fi
 
-# Install Neovim nightly
-echo "Installing Neovim nightly..."
-brew install --cask neovim-nightly || brew install neovim-nightly
+# Install Neovim
+echo "Installing Neovim..."
+if ! brew install --cask neovim-nightly 2>/dev/null; then
+    echo "Neovim nightly not available, installing stable..."
+    brew install neovim
+fi
 
 # Install Claude Code
 if ! command -v claude &> /dev/null; then
