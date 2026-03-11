@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 print_status() {
     printf "\r%-40s ...\n" "$1"

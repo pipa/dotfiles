@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OS="$(uname -s)"
@@ -37,6 +36,16 @@ fi
 
 echo "Detected: $OS ($DISTRO)"
 echo ""
+
+# Clean up existing dotfile symlinks first
+print_status "Cleaning up existing symlinks"
+rm -f "$HOME/.zshrc" "$HOME/.aliases" "$HOME/.gitconfig" 2>/dev/null
+rm -f "$HOME/.config/starship.toml" 2>/dev/null
+rm -f "$HOME/.claude/settings.json" 2>/dev/null
+if [[ -L "$HOME/.config/nvim" ]]; then
+    rm -f "$HOME/.config/nvim" 2>/dev/null
+fi
+print_done "Cleaning up existing symlinks"
 
 # Run OS-specific setup
 case "$OS" in
@@ -130,11 +139,14 @@ print_done "Installing Neovim"
 # Install LazyVim
 print_status "Installing LazyVim"
 NVIM_CONFIG="$HOME/.config/nvim"
+if [[ -L "$NVIM_CONFIG" ]]; then
+    rm "$NVIM_CONFIG"
+fi
 if [[ ! -d "$NVIM_CONFIG" ]] || [[ ! -f "$NVIM_CONFIG/init.lua" ]]; then
+    rm -rf "$NVIM_CONFIG"
     mkdir -p "$NVIM_CONFIG"
-    rm -rf "$NVIM_CONFIG/.git"
-    git clone --depth 1 https://github.com/LazyVim/starter "$NVIM_CONFIG" 2>/dev/null
-    rm -rf "$NVIM_CONFIG/.git"
+    git clone --depth 1 https://github.com/LazyVim/starter "$NVIM_CONFIG" 2>/dev/null || true
+    rm -rf "$NVIM_CONFIG/.git" 2>/dev/null || true
 fi
 print_done "Installing LazyVim"
 
