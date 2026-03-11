@@ -47,6 +47,13 @@ if [[ -L "$HOME/.config/nvim" ]]; then
 fi
 print_done "Cleaning up existing symlinks"
 
+# Clean up old nvim data
+print_status "Cleaning up old nvim data"
+rm -rf "$HOME/.local/share/nvim" 2>/dev/null
+rm -rf "$HOME/.cache/nvim" 2>/dev/null
+rm -rf "$HOME/.local/nvim" 2>/dev/null
+print_done "Cleaning up old nvim data"
+
 # Run OS-specific setup
 case "$OS" in
     Darwin)

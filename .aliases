@@ -220,7 +220,7 @@ newproject() {
 }
 
 # Quick commit with message
-gcmsg() {
+commitmsg() {
     git add -A && git commit -m "$1"
 }
 

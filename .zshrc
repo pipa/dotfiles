@@ -63,7 +63,7 @@ export LESS_TERMCAP_us=$'\e[1;32m'
 
 # Doppler - load ANTHROPIC_API_KEY
 if command -v doppler &> /dev/null; then
-    eval "$(doppler enclave run --print-env -- nop)"
+    eval "$(doppler run --print-env -- nop 2>/dev/null)" || true
 fi
 
 # Set default language
