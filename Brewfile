@@ -41,6 +41,5 @@ brew "docker-buildx"
 # Neovim
 brew "neovim"
 
-# Claude Code & Doppler
-brew "claude"
+# Doppler
 brew "doppler"

@@ -4,40 +4,56 @@ set -e
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OS="$(uname -s)"
 
-# Spinner and status functions
+# Spinner functions
 SPINNER_PID=""
-MSG=""
+CURRENT_MSG=""
 
-spinner() {
-    local msg="$1"
-    local pid=$!
-    local delay=0.1
-    local spinchars='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
-
-    printf "[%s] %s " "░░░░░░░" "$msg"
-    while kill -0 $pid 2>/dev/null; do
-        for char in $spinchars; do
-            printf "\r[%s] %s " "$char" "$msg"
-            sleep $delay
+start_spinner() {
+    CURRENT_MSG="$1"
+    printf "%-40s " "$CURRENT_MSG"
+    
+    # Start spinner in background
+    (
+        while true; do
+            printf "\r%-40s " "$CURRENT_MSG"
+            for s in ▁ ▂ ▃ ▄ ▅ ▆ ▇ █ ▇ ▆ ▅ ▄ ▃ ▂ ▁; do
+                printf "\r%-40s [%s]" "$CURRENT_MSG" "$s"
+                sleep 0.08
+            done
         done
-    done
-    printf "\r[%s] %s \n" "✔" "$msg"
+    ) &
+    SPINNER_PID=$!
+}
+
+stop_spinner() {
+    if [[ -n "$SPINNER_PID" ]]; then
+        kill $SPINNER_PID 2>/dev/null
+        wait $SPINNER_PID 2>/dev/null
+        SPINNER_PID=""
+    fi
+    printf "\r%-40s [✓]\n" "$CURRENT_MSG"
+}
+
+fail_spinner() {
+    if [[ -n "$SPINNER_PID" ]]; then
+        kill $SPINNER_PID 2>/dev/null
+        wait $SPINNER_PID 2>/dev/null
+        SPINNER_PID=""
+    fi
+    printf "\r%-40s [✗]\n" "$CURRENT_MSG"
+    exit 1
 }
 
 run_step() {
     local msg="$1"
     shift
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  $msg"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    "$@"
-    echo "✓ $msg"
-}
-
-fail() {
-    echo "✗ FAILED: $1"
-    exit 1
+    
+    start_spinner "$msg"
+    if "$@" 2>/dev/null; then
+        stop_spinner
+    else
+        fail_spinner
+    fi
 }
 
 echo ""
@@ -70,7 +86,8 @@ case "$OS" in
         run_step "Setting up Linux dependencies..." bash "$DOTFILES_DIR/install/linux.sh"
         ;;
     *)
-        fail "Unsupported OS: $OS"
+        echo "✗ Unsupported OS: $OS"
+        exit 1
         ;;
 esac
 
@@ -113,12 +130,15 @@ run_step "Installing fnm..." \
 export PATH="$HOME/.local/share/fnm:$PATH"
 eval "$(fnm env)"
 
-run_step "Installing Node.js LTS and pnpm..." \
+run_step "Installing Node.js LTS, pnpm, Claude..." \
     fnm install --lts 2>/dev/null || true && \
     fnm default lts-latest 2>/dev/null || true && \
     fnm use lts-latest 2>/dev/null || true && \
     if ! command -v pnpm &> /dev/null; then
         npm install -g pnpm 2>/dev/null
+    fi && \
+    if ! command -v claude &> /dev/null; then
+        npm install -g @anthropic-ai/claude-code 2>/dev/null
     fi
 
 # Install Neovim
