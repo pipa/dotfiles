@@ -1,50 +1,29 @@
 #!/bin/bash
 set -e
 
-# Spinner functions
-SPINNER_PID=""
-CURRENT_MSG=""
-
-start_spinner() {
-    CURRENT_MSG="$1"
-    printf "%-40s " "$CURRENT_MSG"
-    
-    (
-        while true; do
-            printf "\r%-40s " "$CURRENT_MSG"
-            for s in ▁ ▂ ▃ ▄ ▅ ▆ ▇ █ ▇ ▆ ▅ ▄ ▃ ▂ ▁; do
-                printf "\r%-40s [%s]" "$CURRENT_MSG" "$s"
-                sleep 0.08
-            done
-        done
-    ) &
-    SPINNER_PID=$!
+print_status() {
+    printf "\r%-40s ...\n" "$1"
 }
 
-stop_spinner() {
-    if [[ -n "$SPINNER_PID" ]]; then
-        kill $SPINNER_PID 2>/dev/null
-        wait $SPINNER_PID 2>/dev/null
-        SPINNER_PID=""
-    fi
-    printf "\r%-40s [✓]\n" "$CURRENT_MSG"
+print_done() {
+    printf "\r%-40s ✓\n" "$1"
 }
 
 # Install Homebrew if not present
 if ! command -v brew &> /dev/null; then
-    start_spinner "Installing Homebrew..."
+    print_status "Installing Homebrew"
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" 2>/dev/null
-    stop_spinner
+    print_done "Installing Homebrew"
 fi
 
 # Update Homebrew
-start_spinner "Updating Homebrew..."
+print_status "Updating Homebrew"
 brew update 2>/dev/null
-stop_spinner
+print_done "Updating Homebrew"
 
 # Install packages from Brewfile
 if [[ -f "$(dirname "${BASH_SOURCE[0]}")/../Brewfile" ]]; then
-    start_spinner "Installing Homebrew packages..."
-    brew bundle install --file="$(dirname "${BASH_SOURCE[0]}")/../Brewfile" 2>/dev/null
-    stop_spinner
+    print_status "Installing Homebrew packages"
+    brew bundle install --file="$(dirname "${BASH_SOURCE[0]}")/../Brewfile" 2>/dev/null || true
+    print_done "Installing Homebrew packages"
 fi
