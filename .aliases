@@ -1,0 +1,251 @@
+# ===========================================
+# General Shortcuts
+# ===========================================
+
+# Modern ls alternatives
+alias ll='eza -la --icons'
+alias la='eza -la --icons'
+alias l='eza --icons'
+alias ls='eza --icons'
+alias tree='eza --tree'
+
+# Colorize ls
+alias ls='ls --color=auto'
+
+# cat alternative
+alias cat='bat'
+
+# find alternative
+alias find='fd'
+
+# grep with colors
+alias grep='grep --color=auto'
+alias rg='rg --smart-case'
+
+# Reload shell config
+alias reload='source ~/.zshrc'
+
+# Update dotfiles
+alias update-dots='cd ~/dotfiles && git pull && ./setup.sh'
+
+# ===========================================
+# Git Aliases
+# ===========================================
+
+alias g='git'
+alias ga='git add'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git pull'
+alias gs='git status'
+alias gd='git diff'
+alias gco='git checkout'
+alias gbr='git branch'
+alias glog='git log --oneline --graph --decorate'
+alias gm='git merge'
+alias gr='git rebase'
+alias gst='git stash'
+alias gstp='git stash pop'
+alias gdf='git diff'
+alias gco='git checkout'
+alias gcm='git commit -m'
+alias gaa='git add -A'
+alias gnb='git checkout -b'
+
+# Lazygit
+alias lg='lazygit'
+
+# ===========================================
+# Neovim Aliases
+# ===========================================
+
+alias v='nvim'
+alias vi='nvim'
+alias vim='nvim'
+alias sv='sudo nvim'
+
+# Open files in nvim
+alias n='nvim'
+alias nt='nvim .'
+
+# ===========================================
+# Node/npm/pnpm Aliases
+# ===========================================
+
+# npm
+alias ni='npm install'
+alias nis='npm install --save'
+alias nisd='npm install --save-dev'
+alias nr='npm run'
+alias ns='npm start'
+alias nt='npm test'
+alias nd='npm run dev'
+alias nb='npm run build'
+alias nl='npm run lint'
+alias nls='npm list'
+alias nrv='npm remove'
+
+# pnpm
+alias pi='pnpm install'
+alias pid='pnpm install --save-dev'
+alias pr='pnpm run'
+alias ps='pnpm start'
+alias pt='pnpm test'
+alias pd='pnpm dev'
+alias pb='pnpm build'
+alias pl='pnpm lint'
+alias pls='pnpm list'
+alias prv='pnpm remove'
+
+# yarn
+alias yi='yarn install'
+alias yr='yarn run'
+alias ys='yarn start'
+alias yt='yarn test'
+alias yd='yarn dev'
+
+# ===========================================
+# Docker Aliases
+# ===========================================
+
+alias d='docker'
+alias dc='docker compose'
+alias dps='docker ps'
+alias dpsa='docker ps -a'
+alias di='docker images'
+alias dex='docker exec -it'
+alias dlogs='docker logs -f'
+alias dprune='docker system prune -af'
+alias dstop='docker stop $(docker ps -aq)'
+alias drm='docker rm -f'
+alias dib='docker image build -t'
+
+# Docker Compose
+alias dcup='docker compose up -d'
+alias dcdn='docker compose down'
+alias dclog='docker compose logs -f'
+alias dcrestart='docker compose restart'
+
+# ===========================================
+# System Aliases
+# ===========================================
+
+# System monitor
+alias top='btop'
+alias htop='btop'
+
+# Quick help
+alias cheat='tldr'
+
+# Create directory and cd into it
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# Extract any archive
+extract() {
+    if [[ -f "$1" ]]; then
+        case "$1" in
+            *.tar.bz2) tar xjf "$1" ;;
+            *.tar.gz) tar xzf "$1" ;;
+            *.bz2) bunzip2 "$1" ;;
+            *.rar) unrar x "$1" ;;
+            *.gz) gunzip "$1" ;;
+            *.tar) tar xf "$1" ;;
+            *.tbz2) tar xjf "$1" ;;
+            *.tgz) tar xzf "$1" ;;
+            *.zip) unzip "$1" ;;
+            *.Z) uncompress "$1" ;;
+            *.7z) 7z x "$1" ;;
+            *) echo "'$1' cannot be extracted via extract()" ;;
+        esac
+    else
+        echo "'$1' is not a valid file"
+    fi
+}
+
+# Kill process on port
+killport() {
+    lsof -ti:$1 | xargs kill -9 2>/dev/null || echo "No process on port $1"
+}
+
+# Find process
+psg() {
+    ps aux | grep -v grep | grep -i -e "$@"
+}
+
+# Weather
+weather() {
+    curl -s "wttr.in/${1:-}"
+}
+
+# IP Address
+myip() {
+    curl -s https://api.ipify.org && echo
+}
+
+# Count lines of code
+cloc() {
+    find . -type f \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" -o -name "*.py" -o -name "*.rb" -o -name "*.go" -o -name "*.rs" -o -name "*.java" -o -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" \) | xargs wc -l 2>/dev/null | tail -1
+}
+
+# ===========================================
+# Network & SSH
+# ===========================================
+
+# SSH with key
+sshkey() {
+    ssh -i ~/.ssh/"$1" "$2"
+}
+
+# ===========================================
+# Project-Specific Shortcuts
+# ===========================================
+
+# Dev folder shortcuts
+alias dev='cd ~/Developer'
+alias dl='cd ~/Developer/labs'
+alias dw='cd ~/Developer/work'
+
+# ===========================================
+# Functions
+# ===========================================
+
+# Create a new project folder
+newproject() {
+    mkdir -p "$1" && cd "$1"
+    if command -v git &> /dev/null; then
+        git init
+    fi
+}
+
+# Quick commit with message
+gcmsg() {
+    git add -A && git commit -m "$1"
+}
+
+# Undo last commit but keep changes
+git-undo() {
+    git reset --soft HEAD~1
+}
+
+# Show git diff with colors
+gdiff() {
+    git diff --color-words "$@"
+}
+
+# Create git branch and switch to it
+gcb() {
+    git checkout -b "$1"
+}
+
+# Delete merged branches
+gbclean() {
+    git branch --merged main | grep -v "main" | xargs -n 1 git branch -d
+}
+
+# ===========================================
+# Zoxide cd shortcuts (auto-jump)
+# ===========================================
+
+# Most used directories - zoxide handles this automatically

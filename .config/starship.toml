@@ -1,0 +1,152 @@
+format = """
+[┌───────────────────────────────────────────────────](bold green)
+[│](bold green)$directory$git_branch$git_status
+[├─](bold green)$username@$hostname
+[$rust]($symbol) 
+[$nodejs]($symbol) 
+[$python]($symbol) 
+[$golang]($symbol) 
+[$docker_context]($symbol) 
+[$kubernetes]($symbol)
+[$line_break]($character)
+[└─](bold green)$character$fill$elapsed$execution_time$jobs$status$cmd_duration$buffer
+[─>](bold green) """
+
+add_newline = true
+
+[character]
+success_symbol = "[➜](bold green)"
+error_symbol = "[✗](bold red)"
+vimcmd_symbol = "[❮](bold green)"
+
+[cmd_duration]
+min_time = 500
+show_milliseconds = false
+style = "bold dimmed white"
+format = "took [$duration]($style) "
+
+[directory]
+truncation_length = 3
+truncate_to_repo = true
+style = "bold cyan"
+read_only = "🔒"
+read_only_style = "red"
+home_symbol = "~"
+format = "[$read_only$path]($style)[$read_only_style]($style) "
+
+[docker_context]
+format = "via [$symbol$context]($style) "
+style = "blue bold"
+symbol = "🐳 "
+
+[dotnet]
+symbol = ".NET "
+style = "blue bold"
+
+[elixir]
+symbol = "💧 "
+style = "bold purple"
+
+[git_branch]
+symbol = " "
+style = "bold green"
+format = "on [$symbol$branch]($style) "
+
+[git_status]
+format = '([\[$all_status$ahead_behind\]]($style) )'
+style = "bold green"
+conflicted = "⚔️ "
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+untracked = "?${count}"
+stashed = "📦"
+modified = "!${count}"
+staged = "+${count}"
+renamed = "»${count}"
+deleted = "✘${count}"
+
+[golang]
+symbol = "🐹 "
+style = "bold cyan"
+
+[hostname]
+ssh_only = true
+format = "@[$hostname](bold red) "
+disabled = false
+
+[jobs]
+format = "[$symbol$number]($style) "
+style = "bold white"
+symbol = "⚙ "
+
+[kubernetes]
+format = 'via [$symbol$context( \($namespace\) )]($style) '
+style = "blue bold"
+symbol = "☸ "
+disabled = false
+
+[line_break]
+style = "bold red"
+
+[nodejs]
+symbol = "⬢ "
+style = "bold green"
+
+[nix-shell]
+style = "blue bold"
+format = 'via [$symbol$state]($style) '
+symbol = "❄ "
+
+[package]
+symbol = "📦 "
+style = "208 bold"
+
+[python]
+symbol = "🐍 "
+style = "yellow bold"
+pyenv_version = false
+pyenv_prefix = "pyenv "
+
+[rust]
+symbol = "🦀 "
+style = "bold red"
+
+[shell]
+bash_indicator = ""
+fish_indicator = ""
+zsh_indicator = ""
+
+[status]
+disabled = false
+format = "[$symbol$status]($style) "
+success_symbol = "[✔](bold green)"
+error_symbol = "[✘](bold red)"
+none_symbol = "[·](bold white)"
+
+[time]
+disabled = true
+format = 'at [$time]($style) '
+time_style = "bold white"
+
+[username]
+style_user = "bold white"
+style_root = "bold red"
+format_u = "[$user]($style_user) "
+format_root = "[$user]($style_root) "
+ssh_only = true
+show_always = false
+
+[fill]
+style = "bold dimmed white"
+symbol = "· "
+max = 20
+
+[buffer]
+style = "bold dimmed white"
+format = "[$symbol$buffer]($style) "
+
+[execution_time]
+min_time = 500
+style = "bold dimmed white"
+format = "[took $duration]($style) "

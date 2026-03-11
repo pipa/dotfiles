@@ -1,0 +1,119 @@
+[user]
+	name = Pipa
+	email = luis.matute@me.com
+
+[init]
+	defaultBranch = main
+
+[core]
+	editor = nvim
+	pager = delta
+	excludesFile = ~/.gitignore_global
+
+[pager]
+	diff = delta
+	log = delta
+	show = delta
+
+[delta]
+	features = side-by-side line-numbers syntax-highlighting decorations
+	decorations-commit-decoration-style = bold yellow box-ul
+	decorations-file-decoration-style = bold yellow box-ul
+	hyperlinks = true
+	hyperlink-format = bash
+
+[interactive]
+	diffFilter = delta --color-only
+
+[color]
+	ui = auto
+
+[alias]
+	# Shortcuts
+	co = checkout
+	br = branch
+	st = status
+	lg = log --oneline --graph --decorate
+	ad = add
+	cm = commit
+	ps = push
+	pl = pull
+	df = diff
+
+	# Extended
+	undo = reset --soft HEAD~1
+	amend = commit --amend --no-edit
+	 amend-last = commit --amend --no-edit
+	history = log --oneline --graph --all --decorate
+	last = log -1 --stat
+	contributors = shortlog -sn
+
+	# Branch
+	bb = branch -a
+	bd = branch -d
+	bD = branch -D
+	current = rev-parse --abbrev-ref HEAD
+
+	# Diff
+	ds = diff --staged
+	dc = diff --cached
+	dw = diff --word-diff
+
+	# Log
+	graph = log --oneline --graph --all --decorate
+	tree = log --graph --oneline --all --decorate --name-only
+	lg1 = log --oneline -n 20
+	lg2 = log --oneline -n 50
+
+	# Stash
+	ss = stash
+	sp = stash pop
+	sl = stash list
+	sd = stash drop
+
+	# Worktree
+	wt = worktree
+	wta = worktree add
+	wtl = worktree list
+	wtr = worktree remove
+
+	# Cleanup
+	clean-branches = !git fetch -p && git branch -vv | grep ': gone]' | awk '{print $1}' | xargs -r git branch -d
+
+[push]
+	default = simple
+	autoSetupRemote = true
+	followTags = true
+
+[pull]
+	rebase = false
+
+[fetch]
+	prune = true
+	pruneTags = true
+
+[rebase]
+	autoStash = true
+	autoSquash = true
+
+[credential]
+	helper = cache --timeout=3600
+	helper = !git credential-manager-core get, git credential-manager-core store
+
+[url "git@github.com:"]
+	insteadOf = https://github.com/
+
+[includeIf "gitdir:~/work/"]
+	path = ~/.gitconfig-work
+
+[diff]
+	colorMoved = default
+
+[merge]
+	conflictstyle = diff3
+
+[help]
+	autoCorrect = prompt
+
+[rebase]
+	autoFixup = auto
