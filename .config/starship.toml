@@ -28,7 +28,7 @@ $line_break$character"""
 
 add_newline = false
 
-right_format = "$env_var.SSH_CONNECTION"
+right_format = "$custom.ssh"
 
 scan_timeout = 35
 command_timeout = 700
@@ -225,7 +225,8 @@ symbol = ""
 style = "bg:color_bg1"
 format = '[[ $symbol $number ](fg:color_fg0 bg:color_yellow)]($style)'
 
-[env_var.SSH_CONNECTION]
-variable = "SSH_CONNECTION"
+[custom.ssh]
+command = "echo '󰒍 SSH'"
+when = '[ -n "$SSH_CONNECTION" ]'
 style = 'bg:color_bright_red'
-format = '[[ 󰒍 SSH ](fg:color_fg0 bg:color_bright_red)]($style)'
+format = '[[ $output ](fg:color_fg0 bg:color_bright_red)]($style)'
