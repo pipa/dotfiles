@@ -80,6 +80,18 @@ print_header
 echo "Detected: $OS ($DISTRO)"
 echo ""
 
+# Clean up existing dotfile symlinks first
+rm -f "$HOME/.zshrc" "$HOME/.aliases" "$HOME/.gitconfig" 2>/dev/null
+rm -f "$HOME/.config/starship.toml" 2>/dev/null
+rm -f "$HOME/.claude/settings.json" 2>/dev/null
+if [[ -L "$HOME/.config/nvim" ]]; then
+    rm -f "$HOME/.config/nvim" 2>/dev/null
+fi
+
+# Clean up old nvim data
+rm -rf "$HOME/.local/share/nvim" 2>/dev/null
+rm -rf "$HOME/.cache/nvim" 2>/dev/null
+
 # ═══════════════════════════════════════════
 # OS Setup
 # ═══════════════════════════════════════════
