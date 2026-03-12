@@ -2,70 +2,104 @@
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OS="$(uname -s)"
+LOG_FILE="/tmp/dotfiles-setup-$$.log"
+STEP_FILE="/tmp/dotfiles-step-$$"
+ANIM_PID=""
+RESULTS=()
+FAILED=false
 
-# Spinner
-SPINNER_PID=""
-SPINNER_FRAMES=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏")
-SPINNER_IDX=0
+# ═══════════════════════════════════════════
+# Animation — bouncing progress bar
+# ═══════════════════════════════════════════
+BAR_WIDTH=30
+BLOCK="████"
+BLOCK_LEN=4
+DIM="\033[2m"
+BOLD="\033[1m"
+CYAN="\033[36m"
+GREEN="\033[32m"
+RED="\033[31m"
+YELLOW="\033[33m"
+RESET="\033[0m"
 
-print_header() {
-    echo ""
-    echo "╔══════════════════════════════════════════╗"
-    echo "║         Dotfiles Setup for $OS          ║"
-    echo "╚══════════════════════════════════════════╝"
-    echo ""
-}
-
-start_spinner() {
-    local msg="$1"
-    printf "  %-40s " "$msg"
-    
+start_animation() {
+    echo "" > "$STEP_FILE"
     (
+        local pos=0 dir=1
+        local max=$((BAR_WIDTH - BLOCK_LEN))
+        tput civis 2>/dev/null  # hide cursor
         while true; do
-            printf "\r  %-40s [%s]" "$msg" "${SPINNER_FRAMES[$SPINNER_IDX]}"
-            SPINNER_IDX=$(( (SPINNER_IDX + 1) % ${#SPINNER_FRAMES[@]} ))
-            sleep 0.1
+            local msg
+            msg=$(cat "$STEP_FILE" 2>/dev/null)
+            local bar=""
+            for ((i = 0; i < BAR_WIDTH; i++)); do
+                if ((i >= pos && i < pos + BLOCK_LEN)); then
+                    bar+="█"
+                else
+                    bar+="░"
+                fi
+            done
+            printf "\r  ${DIM}${CYAN}%s${RESET}  ${BOLD}%s${RESET}" "$bar" "$msg"
+            # Clear any leftover chars from previous longer messages
+            printf "%-10s" ""
+            pos=$((pos + dir))
+            if ((pos >= max)); then dir=-1; fi
+            if ((pos <= 0)); then dir=1; fi
+            sleep 0.04
         done
     ) &
-    SPINNER_PID=$!
+    ANIM_PID=$!
 }
 
-stop_spinner() {
-    if [[ -n "$SPINNER_PID" ]]; then
-        kill "$SPINNER_PID" 2>/dev/null
-        wait "$SPINNER_PID" 2>/dev/null || true
-        SPINNER_PID=""
+stop_animation() {
+    if [[ -n "$ANIM_PID" ]]; then
+        kill "$ANIM_PID" 2>/dev/null
+        wait "$ANIM_PID" 2>/dev/null || true
+        ANIM_PID=""
     fi
-    printf "\r  %-40s [✓]\n" "$CURRENT_MSG"
-    CURRENT_MSG=""
+    tput cnorm 2>/dev/null  # restore cursor
+    printf "\r%-80s\r" ""   # clear the line
 }
 
-CURRENT_MSG=""
+set_step() {
+    echo "$1" > "$STEP_FILE"
+}
 
+# ═══════════════════════════════════════════
+# Step runner — captures output, handles errors
+# ═══════════════════════════════════════════
 run_step() {
-    local msg="$1"
+    local label="$1"
     shift
-    CURRENT_MSG="$msg"
-    start_spinner "$msg"
-    "$@" >/dev/null 2>&1
-    stop_spinner
+    set_step "$label"
+    echo "=== $label ===" >> "$LOG_FILE"
+    if "$@" >> "$LOG_FILE" 2>&1; then
+        RESULTS+=("${GREEN}✓${RESET} $label")
+        return 0
+    else
+        local exit_code=$?
+        RESULTS+=("${RED}✗${RESET} $label")
+        stop_animation
+        echo ""
+        printf "  ${RED}${BOLD}Error:${RESET} %s failed (exit %d)\n" "$label" "$exit_code"
+        echo ""
+        printf "  ${DIM}Last 10 lines of output:${RESET}\n"
+        tail -10 "$LOG_FILE" | while IFS= read -r line; do
+            printf "  ${DIM}│${RESET} %s\n" "$line"
+        done
+        echo ""
+        printf "  ${DIM}Full log: %s${RESET}\n" "$LOG_FILE"
+        echo ""
+        FAILED=true
+        start_animation
+        return 1
+    fi
 }
 
-print_section() {
-    echo ""
-    echo "━━━ $1 ━━━"
-    echo ""
-}
-
-print_summary() {
-    echo ""
-    echo "╔══════════════════════════════════════════╗"
-    echo "║           Setup Complete! 🎉             ║"
-    echo "╚══════════════════════════════════════════╝"
-    echo ""
-}
-
+# ═══════════════════════════════════════════
 # Detect OS
+# ═══════════════════════════════════════════
+DISTRO=""
 if [[ "$OS" == "Linux" ]]; then
     if [[ -f /etc/os-release ]]; then
         source /etc/os-release
@@ -77,11 +111,26 @@ if [[ "$OS" == "Linux" ]]; then
     fi
 fi
 
-print_header
-echo "Detected: $OS ($DISTRO)"
+# ═══════════════════════════════════════════
+# Header
+# ═══════════════════════════════════════════
+clear
+echo ""
+printf "  ${BOLD}dotfiles${RESET} ${DIM}—${RESET} setup for "
+if [[ "$OS" == "Darwin" ]]; then
+    printf "macOS\n"
+else
+    printf "Linux ($DISTRO)\n"
+fi
 echo ""
 
-# Backup existing dotfiles before overwriting
+: > "$LOG_FILE"
+start_animation
+
+# ═══════════════════════════════════════════
+# Backup existing dotfiles
+# ═══════════════════════════════════════════
+set_step "Checking existing dotfiles"
 BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d%H%M%S)"
 NEED_BACKUP=false
 for f in "$HOME/.zshrc" "$HOME/.aliases" "$HOME/.gitconfig" "$HOME/.config/starship.toml"; do
@@ -97,77 +146,88 @@ if $NEED_BACKUP; then
             cp "$f" "$BACKUP_DIR/" 2>/dev/null || true
         fi
     done
-    echo "Backed up existing dotfiles to: $BACKUP_DIR"
+    RESULTS+=("${YELLOW}↗${RESET} Backed up dotfiles to $BACKUP_DIR")
 fi
 
-# Clean up existing dotfile symlinks first
+# Clean up existing dotfile symlinks
 rm -f "$HOME/.zshrc" "$HOME/.aliases" "$HOME/.gitconfig" 2>/dev/null
 rm -f "$HOME/.config/starship.toml" 2>/dev/null
 rm -f "$HOME/.claude/settings.json" 2>/dev/null
-if [[ -L "$HOME/.config/nvim" ]]; then
-    rm -f "$HOME/.config/nvim" 2>/dev/null
-fi
-
-# Clean up old nvim data
+[[ -L "$HOME/.config/nvim" ]] && rm -f "$HOME/.config/nvim" 2>/dev/null
 rm -rf "$HOME/.local/share/nvim" 2>/dev/null
 rm -rf "$HOME/.cache/nvim" 2>/dev/null
 
 # ═══════════════════════════════════════════
-# OS Setup
+# OS Dependencies
 # ═══════════════════════════════════════════
-print_section "OS Dependencies"
 if [[ "$OS" == "Darwin" ]]; then
-    run_step "Setting up macOS" bash "$DOTFILES_DIR/install/macos.sh"
+    run_step "Installing macOS dependencies" bash "$DOTFILES_DIR/install/macos.sh"
 elif [[ "$OS" == "Linux" ]]; then
-    run_step "Setting up Linux" bash "$DOTFILES_DIR/install/linux.sh"
+    run_step "Installing Linux dependencies" bash "$DOTFILES_DIR/install/linux.sh"
 fi
 
 # ═══════════════════════════════════════════
-# Shell Setup
+# Shell — Oh My Zsh
 # ═══════════════════════════════════════════
-print_section "Shell"
-
-run_step "Installing Oh My Zsh" \
-    test ! -d "$HOME/.oh-my-zsh"
-
-if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+if [[ -d "$HOME/.oh-my-zsh" ]]; then
+    RESULTS+=("${GREEN}✓${RESET} Oh My Zsh ${DIM}(already installed)${RESET}")
+else
+    run_step "Installing Oh My Zsh" \
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 fi
 
-run_step "Installing zsh plugins" \
-    test -d "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
-
+# ═══════════════════════════════════════════
+# Shell — Zsh plugins
+# ═══════════════════════════════════════════
 ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
-if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]]; then
-    git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
-fi
-if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-completions" ]]; then
-    git clone https://github.com/zsh-users/zsh-completions "$ZSH_CUSTOM/plugins/zsh-completions"
-fi
-if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]]; then
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
-fi
-if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-autopair" ]]; then
-    git clone https://github.com/hlissner/zsh-autopair "$ZSH_CUSTOM/plugins/zsh-autopair"
-fi
+install_zsh_plugins() {
+    local changed=false
+    if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]]; then
+        git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
+        changed=true
+    fi
+    if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-completions" ]]; then
+        git clone https://github.com/zsh-users/zsh-completions "$ZSH_CUSTOM/plugins/zsh-completions"
+        changed=true
+    fi
+    if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]]; then
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
+        changed=true
+    fi
+    if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-autopair" ]]; then
+        git clone https://github.com/hlissner/zsh-autopair "$ZSH_CUSTOM/plugins/zsh-autopair"
+        changed=true
+    fi
+    $changed || return 0
+}
 
-run_step "Installing Starship" \
-    test -x "$(command -v starship)"
-
-if ! command -v starship &> /dev/null; then
-    curl -sS https://starship.rs/install.sh | sh -s -- -y
+if [[ -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" && \
+      -d "$ZSH_CUSTOM/plugins/zsh-completions" && \
+      -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" && \
+      -d "$ZSH_CUSTOM/plugins/zsh-autopair" ]]; then
+    RESULTS+=("${GREEN}✓${RESET} Zsh plugins ${DIM}(already installed)${RESET}")
+else
+    run_step "Installing zsh plugins" install_zsh_plugins
 fi
 
 # ═══════════════════════════════════════════
-# Node.js
+# Shell — Starship
 # ═══════════════════════════════════════════
-print_section "Node.js"
+if command -v starship &> /dev/null; then
+    RESULTS+=("${GREEN}✓${RESET} Starship ${DIM}(already installed)${RESET}")
+else
+    run_step "Installing Starship" \
+        sh -c "curl -sS https://starship.rs/install.sh | sh -s -- -y"
+fi
 
-run_step "Installing fnm" \
-    test -x "$(command -v fnm)"
-
-if ! command -v fnm &> /dev/null; then
-    curl -fsSL https://fnm.vercel.app/install | bash
+# ═══════════════════════════════════════════
+# Node.js — fnm
+# ═══════════════════════════════════════════
+if command -v fnm &> /dev/null; then
+    RESULTS+=("${GREEN}✓${RESET} fnm ${DIM}(already installed)${RESET}")
+else
+    run_step "Installing fnm" \
+        sh -c "curl -fsSL https://fnm.vercel.app/install | bash"
 fi
 
 export PATH="$HOME/.local/share/fnm:$PATH"
@@ -175,32 +235,32 @@ if command -v fnm &> /dev/null; then
     eval "$(fnm env)"
 fi
 
-run_step "Installing Node.js & pnpm" \
+# ═══════════════════════════════════════════
+# Node.js — LTS + pnpm
+# ═══════════════════════════════════════════
+install_node_and_pnpm() {
     fnm install --lts
+    fnm default lts-latest
+    fnm use lts-latest
+    if ! command -v pnpm &> /dev/null; then
+        npm install -g pnpm
+    fi
+}
+run_step "Installing Node.js & pnpm" install_node_and_pnpm
 
-fnm default lts-latest
-fnm use lts-latest
-
-if ! command -v pnpm &> /dev/null; then
-    npm install -g pnpm
-fi
-
-run_step "Installing Claude Code" \
-    test -x "$(command -v claude)"
-
-if ! command -v claude &> /dev/null; then
-    npm install -g @anthropic-ai/claude-code
+# ═══════════════════════════════════════════
+# Claude Code
+# ═══════════════════════════════════════════
+if command -v claude &> /dev/null; then
+    RESULTS+=("${GREEN}✓${RESET} Claude Code ${DIM}(already installed)${RESET}")
+else
+    run_step "Installing Claude Code" npm install -g @anthropic-ai/claude-code
 fi
 
 # ═══════════════════════════════════════════
 # Neovim
 # ═══════════════════════════════════════════
-print_section "Neovim"
-
-run_step "Installing Neovim" \
-    test -x "$(command -v nvim)"
-
-if ! command -v nvim &> /dev/null; then
+install_neovim() {
     if [[ "$OS" == "Darwin" ]]; then
         curl -sLO https://github.com/neovim/neovim/releases/download/nightly/nvim-macos-arm64.tar.gz
         sudo rm -rf /opt/nvim-macos-arm64
@@ -214,47 +274,80 @@ if ! command -v nvim &> /dev/null; then
         rm -f nvim-linux-x86_64.tar.gz
         sudo ln -sf /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim
     fi
-fi
+}
 
-run_step "Installing LazyVim" \
-    test -f "$HOME/.config/nvim/init.lua"
-
-NVIM_CONFIG="$HOME/.config/nvim"
-if [[ ! -f "$NVIM_CONFIG/init.lua" ]]; then
-    mkdir -p "$NVIM_CONFIG"
-    rm -rf "$NVIM_CONFIG/.git"
-    git clone --depth 1 https://github.com/LazyVim/starter "$NVIM_CONFIG"
-    rm -rf "$NVIM_CONFIG/.git"
+if command -v nvim &> /dev/null; then
+    RESULTS+=("${GREEN}✓${RESET} Neovim ${DIM}(already installed)${RESET}")
+else
+    run_step "Installing Neovim" install_neovim
 fi
 
 # ═══════════════════════════════════════════
-# Dotfiles
+# LazyVim
 # ═══════════════════════════════════════════
-print_section "Dotfiles"
+install_lazyvim() {
+    local nvim_config="$HOME/.config/nvim"
+    mkdir -p "$nvim_config"
+    rm -rf "$nvim_config/.git"
+    git clone --depth 1 https://github.com/LazyVim/starter "$nvim_config"
+    rm -rf "$nvim_config/.git"
+}
 
+if [[ -f "$HOME/.config/nvim/init.lua" ]]; then
+    RESULTS+=("${GREEN}✓${RESET} LazyVim ${DIM}(already installed)${RESET}")
+else
+    run_step "Installing LazyVim" install_lazyvim
+fi
+
+# ═══════════════════════════════════════════
+# Dotfiles — symlinks
+# ═══════════════════════════════════════════
 run_step "Linking dotfiles" bash "$DOTFILES_DIR/scripts/link.sh"
 
-run_step "Setting zsh as default shell" \
-    [[ "$SHELL" == *"zsh" ]]
-
-if [[ "$SHELL" != *"zsh" ]]; then
-    ZSH_PATH="$(command -v zsh)"
-    if [[ -n "$ZSH_PATH" ]]; then
-        # Ensure zsh is in /etc/shells
-        if ! grep -qx "$ZSH_PATH" /etc/shells 2>/dev/null; then
-            echo "$ZSH_PATH" | sudo tee -a /etc/shells >/dev/null
+# ═══════════════════════════════════════════
+# Default shell — zsh
+# ═══════════════════════════════════════════
+set_default_zsh() {
+    local zsh_path
+    zsh_path="$(command -v zsh)"
+    if [[ -n "$zsh_path" ]]; then
+        if ! grep -qx "$zsh_path" /etc/shells 2>/dev/null; then
+            echo "$zsh_path" | sudo tee -a /etc/shells >/dev/null
         fi
-        sudo chsh -s "$ZSH_PATH" "$(whoami)" 2>/dev/null || chsh -s "$ZSH_PATH" 2>/dev/null || true
+        sudo chsh -s "$zsh_path" "$(whoami)" 2>/dev/null || chsh -s "$zsh_path" 2>/dev/null || true
     fi
+}
+
+if [[ "$SHELL" == *"zsh" ]]; then
+    RESULTS+=("${GREEN}✓${RESET} Default shell ${DIM}(already zsh)${RESET}")
+else
+    run_step "Setting zsh as default shell" set_default_zsh
 fi
 
 # ═══════════════════════════════════════════
-# Complete
+# Done — stop animation, print summary
 # ═══════════════════════════════════════════
-print_summary
-echo "Next steps:"
-echo "  1. Restart your terminal"
-echo "  2. Run 'nvim' to complete LazyVim setup"
-echo "  3. Authenticate with Doppler: doppler login"
-echo "  4. Select project: doppler config set-project vini"
+stop_animation
+
 echo ""
+if $FAILED; then
+    printf "  ${BOLD}${YELLOW}Setup completed with errors${RESET}\n"
+else
+    printf "  ${BOLD}${GREEN}Setup complete${RESET}\n"
+fi
+echo ""
+
+for result in "${RESULTS[@]}"; do
+    printf "  %b\n" "$result"
+done
+
+echo ""
+printf "  ${DIM}───────────────────────────────────────${RESET}\n"
+echo ""
+printf "  ${BOLD}Next steps:${RESET}\n"
+printf "  ${DIM}1.${RESET} Restart your terminal\n"
+printf "  ${DIM}2.${RESET} Run ${BOLD}nvim${RESET} to complete LazyVim setup\n"
+printf "  ${DIM}3.${RESET} ${DIM}doppler login${RESET} → ${DIM}doppler config set-project vini${RESET}\n"
+echo ""
+
+rm -f "$STEP_FILE"
