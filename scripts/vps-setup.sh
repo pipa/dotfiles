@@ -59,12 +59,6 @@ systemctl enable fail2ban && systemctl start fail2ban
 systemctl enable docker && systemctl start docker
 usermod -aG docker $DEPLOY_USER
 
-echo "=== 6. Clone Vermogen ==="
-# NOTE: This uses HTTPS to avoid needing an SSH key for the deploy user at setup time.
-# If the repo is private, you'll need a Personal Access Token:
-#   git clone https://<token>@github.com/LuMatRod/patrimonio.git /opt/patrimonio
-su - $DEPLOY_USER -c "git clone https://github.com/LuMatRod/patrimonio.git /opt/patrimonio"
-
 echo "=== DONE ==="
 echo "SSH on port $SSH_PORT"
 echo "Connect: ssh -p $SSH_PORT $DEPLOY_USER@$VPS_IP"
