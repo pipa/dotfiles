@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -14,19 +13,15 @@ link_file() {
     local target_dir="$(dirname "$target")"
     mkdir -p "$target_dir"
     
-    # Remove existing file/directory if it's not a symlink
-    if [[ -e "$target" ]] && [[ ! -L "$target" ]]; then
+    # Remove existing file/directory/symlink
+    if [[ -e "$target" ]] || [[ -L "$target" ]]; then
         echo "  Removing existing: $target"
         rm -rf "$target"
     fi
     
     # Create symlink
-    if [[ ! -L "$target" ]]; then
-        echo "  Linking: $source -> $target"
-        ln -sf "$source" "$target"
-    else
-        echo "  Already linked: $target"
-    fi
+    echo "  Linking: $source -> $target"
+    ln -sf "$source" "$target"
 }
 
 # Link dotfiles

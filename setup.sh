@@ -44,6 +44,7 @@ CURRENT_MSG=""
 
 run_step() {
     local msg="$1"
+    shift
     CURRENT_MSG="$msg"
     start_spinner "$msg"
     "$@" >/dev/null 2>&1
