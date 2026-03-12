@@ -40,9 +40,10 @@ stop_spinner() {
     CURRENT_MSG=""
 }
 
-run_silent() {
+CURRENT_MSG=""
+
+run_step() {
     local msg="$1"
-    shift
     CURRENT_MSG="$msg"
     start_spinner "$msg"
     "$@" >/dev/null 2>&1
@@ -83,29 +84,39 @@ echo ""
 # OS Setup
 # ═══════════════════════════════════════════
 print_section "OS Dependencies"
-run_silent "Setting up macOS..." bash "$DOTFILES_DIR/install/macos.sh"
+run_step "Setting up macOS" bash "$DOTFILES_DIR/install/macos.sh"
 
 # ═══════════════════════════════════════════
 # Shell Setup
 # ═══════════════════════════════════════════
 print_section "Shell"
 
-run_silent "Installing Oh My Zsh..." \
+run_step "Installing Oh My Zsh" \
     test ! -d "$HOME/.oh-my-zsh"
 
 if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 fi
 
-run_silent "Installing zsh plugins..." \
-    ZSH_CUSTOM="$HOME/.oh-my-zsh/custom" && \
-    (test ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" && git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions") && \
-    (test ! -d "$ZSH_CUSTOM/plugins/zsh-completions" && git clone https://github.com/zsh-users/zsh-completions "$ZSH_CUSTOM/plugins/zsh-completions") && \
-    (test ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting") && \
-    (test ! -d "$ZSH_CUSTOM/plugins/zsh-autopair" && git clone https://github.com/hlissner/zsh-autopair "$ZSH_CUSTOM/plugins/zsh-autopair")
+run_step "Installing zsh plugins" \
+    test -d "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
 
-run_silent "Installing Starship..." \
-    test ! -x "$(command -v starship)"
+ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
+if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]]; then
+    git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
+fi
+if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-completions" ]]; then
+    git clone https://github.com/zsh-users/zsh-completions "$ZSH_CUSTOM/plugins/zsh-completions"
+fi
+if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]]; then
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
+fi
+if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-autopair" ]]; then
+    git clone https://github.com/hlissner/zsh-autopair "$ZSH_CUSTOM/plugins/zsh-autopair"
+fi
+
+run_step "Installing Starship" \
+    test -x "$(command -v starship)"
 
 if ! command -v starship &> /dev/null; then
     curl -sS https://starship.rs/install.sh | sh -s -- -y
@@ -116,8 +127,8 @@ fi
 # ═══════════════════════════════════════════
 print_section "Node.js"
 
-run_silent "Installing fnm..." \
-    test ! -x "$(command -v fnm)"
+run_step "Installing fnm" \
+    test -x "$(command -v fnm)"
 
 if ! command -v fnm &> /dev/null; then
     curl -fsSL https://fnm.vercel.app/install | bash
@@ -128,13 +139,17 @@ if command -v fnm &> /dev/null; then
     eval "$(fnm env)"
 fi
 
-run_silent "Installing Node.js & pnpm..." \
-    (fnm install --lts) && \
-    (fnm default lts-latest) && \
-    (fnm use lts-latest) && \
-    (test -x "$(command -v pnpm)" || npm install -g pnpm)
+run_step "Installing Node.js & pnpm" \
+    fnm install --lts
 
-run_silent "Installing Claude Code..." \
+fnm default lts-latest
+fnm use lts-latest
+
+if ! command -v pnpm &> /dev/null; then
+    npm install -g pnpm
+fi
+
+run_step "Installing Claude Code" \
     test -x "$(command -v claude)"
 
 if ! command -v claude &> /dev/null; then
@@ -146,25 +161,37 @@ fi
 # ═══════════════════════════════════════════
 print_section "Neovim"
 
-run_silent "Installing Neovim..." \
-    (test -x "$(command -v nvim)") || \
-    (brew install --cask neovim-nightly) || \
-    (brew install neovim)
+run_step "Installing Neovim" \
+    test -x "$(command -v nvim)"
 
-run_silent "Installing LazyVim..." \
-    NVIM_CONFIG="$HOME/.config/nvim" && \
-    (test -d "$NVIM_CONFIG" && test -f "$NVIM_CONFIG/init.lua") || \
-    (mkdir -p "$NVIM_CONFIG" && rm -rf "$NVIM_CONFIG/.git" && git clone --depth 1 https://github.com/LazyVim/starter "$NVIM_CONFIG" && rm -rf "$NVIM_CONFIG/.git")
+if ! command -v nvim &> /dev/null; then
+    brew install --cask neovim-nightly 2>/dev/null || brew install neovim
+fi
+
+run_step "Installing LazyVim" \
+    test -f "$HOME/.config/nvim/init.lua"
+
+NVIM_CONFIG="$HOME/.config/nvim"
+if [[ ! -f "$NVIM_CONFIG/init.lua" ]]; then
+    mkdir -p "$NVIM_CONFIG"
+    rm -rf "$NVIM_CONFIG/.git"
+    git clone --depth 1 https://github.com/LazyVim/starter "$NVIM_CONFIG"
+    rm -rf "$NVIM_CONFIG/.git"
+fi
 
 # ═══════════════════════════════════════════
 # Dotfiles
 # ═══════════════════════════════════════════
 print_section "Dotfiles"
 
-run_silent "Linking dotfiles..." bash "$DOTFILES_DIR/scripts/link.sh"
+run_step "Linking dotfiles" bash "$DOTFILES_DIR/scripts/link.sh"
 
-run_silent "Setting zsh as default shell..." \
-    ([[ "$SHELL" == *"zsh" ]]) || (sudo chsh -s /bin/zsh) || (chsh -s /bin/zsh) || true
+run_step "Setting zsh as default shell" \
+    [[ "$SHELL" == *"zsh" ]]
+
+if [[ "$SHELL" != *"zsh" ]]; then
+    sudo chsh -s /bin/zsh 2>/dev/null || chsh -s /bin/zsh 2>/dev/null || true
+fi
 
 # ═══════════════════════════════════════════
 # Complete

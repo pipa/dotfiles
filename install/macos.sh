@@ -1,6 +1,6 @@
 #!/bin/bash
 
-run_silent() {
+run_step() {
     local msg="$1"
     shift
     printf "  %-40s ... " "$msg"
@@ -10,15 +10,15 @@ run_silent() {
 
 # Install Homebrew if not present
 if ! command -v brew &> /dev/null; then
-    run_silent "Installing Homebrew" \
+    run_step "Installing Homebrew" \
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
-run_silent "Updating Homebrew" \
+run_step "Updating Homebrew" \
     brew update
 
 # Install packages from Brewfile
 if [[ -f "$(dirname "${BASH_SOURCE[0]}")/../Brewfile" ]]; then
-    run_silent "Installing Homebrew packages" \
+    run_step "Installing Homebrew packages" \
         brew bundle install --file="$(dirname "${BASH_SOURCE[0]}")/../Brewfile"
 fi
