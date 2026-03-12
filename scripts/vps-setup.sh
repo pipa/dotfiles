@@ -47,8 +47,13 @@ sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 sed -i 's/^#*PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
 
-# Validate config then restart via systemd (do NOT kill sshd manually — you'll drop your connection)
+# Validate config
 sshd -t
+
+# Ubuntu 24 uses socket-activated SSH by default (ssh.socket controls the port).
+# Disable the socket unit so sshd_config port takes effect, then enable the service directly.
+systemctl disable --now ssh.socket 2>/dev/null || true
+systemctl enable --now ssh
 systemctl restart ssh
 
 echo "=== 4. UFW firewall ==="
