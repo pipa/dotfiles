@@ -1,28 +1,24 @@
 #!/bin/bash
 
-print_status() {
-    printf "  %-40s ... " "$1"
-}
-
-print_done() {
-    printf "%s\n" "[✓]"
+run_silent() {
+    local msg="$1"
+    shift
+    printf "  %-40s ... " "$msg"
+    "$@" >/dev/null 2>&1
+    echo "[✓]"
 }
 
 # Install Homebrew if not present
 if ! command -v brew &> /dev/null; then
-    print_status "Installing Homebrew"
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" 2>/dev/null
-    print_done
+    run_silent "Installing Homebrew" \
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
-# Update Homebrew
-print_status "Updating Homebrew"
-brew update 2>/dev/null
-print_done
+run_silent "Updating Homebrew" \
+    brew update
 
 # Install packages from Brewfile
 if [[ -f "$(dirname "${BASH_SOURCE[0]}")/../Brewfile" ]]; then
-    print_status "Installing Homebrew packages"
-    brew bundle install --file="$(dirname "${BASH_SOURCE[0]}")/../Brewfile" 2>/dev/null || true
-    print_done
+    run_silent "Installing Homebrew packages" \
+        brew bundle install --file="$(dirname "${BASH_SOURCE[0]}")/../Brewfile"
 fi
