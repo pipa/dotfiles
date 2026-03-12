@@ -5,6 +5,7 @@ return {
   opts = {
     open_fold_hl_timeout = 150,
     close_fold_kinds = { "imports", "comment" },
+    fold_level_start = 1,
     preview = {
       win_config = {
         border = "rounded",

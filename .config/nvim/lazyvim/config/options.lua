@@ -37,11 +37,10 @@ vim.opt.termguicolors = true
 vim.opt.guicursor = "n-v-c:block,i-ci-ve:blinkon100-blinkon100,r-cr:hor20,a:blinkon100"
 
 -- Folding with nvim-ufo
-vim.opt.foldmethod = "expr"
-vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-vim.opt.foldlevel = 1
+vim.opt.foldlevel = 99
 vim.opt.foldlevelstart = 1
 vim.opt.foldenable = true
+vim.opt.foldmethod = "manual"
 
 -- Splits
 vim.opt.splitright = true
