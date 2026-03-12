@@ -26,8 +26,16 @@ chmod 600 /home/$DEPLOY_USER/.ssh/authorized_keys 2>/dev/null || true
 
 echo "=== 2. Installing packages ==="
 apt update && apt upgrade -y
-# Note: docker-compose (v1) is removed in Ubuntu 24. Use docker-compose-plugin (v2).
-apt install -y curl wget git zsh build-essential pkg-config libssl-dev unzip ufw fail2ban docker.io docker-compose-plugin
+apt install -y curl wget git zsh build-essential pkg-config libssl-dev unzip ufw fail2ban ca-certificates gnupg
+
+# Add Docker's official apt repo (docker-compose-plugin lives here, not in Ubuntu's default repos)
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  | tee /etc/apt/sources.list.d/docker.list > /dev/null
+apt update
+apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 echo "=== 3. SSH hardening ==="
 # Ensure only one Port line
