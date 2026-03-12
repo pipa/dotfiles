@@ -1,6 +1,10 @@
 #!/bin/bash
 
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# If DOTFILES_DIR is already set (e.g. exported by setup.sh), use it.
+# Otherwise resolve it relative to this script's location.
+if [[ -z "$DOTFILES_DIR" ]]; then
+  DOTFILES_DIR="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/.." && pwd)"
+fi
 
 echo "Linking dotfiles to home directory..."
 

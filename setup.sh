@@ -1,6 +1,7 @@
 #!/bin/bash
 
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
+export DOTFILES_DIR
 OS="$(uname -s)"
 LOG_FILE="/tmp/dotfiles-setup-$$.log"
 STEP_FILE="/tmp/dotfiles-step-$$"
