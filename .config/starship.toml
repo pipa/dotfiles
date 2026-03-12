@@ -28,7 +28,7 @@ $line_break$character"""
 
 add_newline = false
 
-right_format = "$custom.ssh"
+right_format = "$custom"
 
 scan_timeout = 35
 command_timeout = 700

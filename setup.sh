@@ -232,7 +232,7 @@ fi
 
 export PATH="$HOME/.local/share/fnm:$PATH"
 if command -v fnm &> /dev/null; then
-    eval "$(fnm env)"
+    eval "$(fnm env --shell bash)"
 fi
 
 # ═══════════════════════════════════════════
