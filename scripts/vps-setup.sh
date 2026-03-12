@@ -53,11 +53,11 @@ sshd -t
 # Ubuntu 24 uses socket-activated SSH by default (ssh.socket controls the port).
 # Disable the socket unit so sshd_config port takes effect, then enable the service directly.
 systemctl disable --now ssh.socket 2>/dev/null || true
-systemctl enable --now ssh
+systemctl enable ssh
 systemctl restart ssh
 
 echo "=== 4. UFW firewall ==="
-ufw allow 22/tcp   # Keep as fallback until 2222 works
+ufw allow 22/tcp   # Temporary fallback — closed at the end of this script
 ufw allow $SSH_PORT/tcp
 ufw allow 80/tcp
 ufw allow 443/tcp
@@ -65,16 +65,21 @@ ufw default deny incoming
 ufw default allow outgoing
 ufw --force enable
 
-systemctl enable ssh
-
 echo "=== 5. fail2ban + Docker ==="
 systemctl enable fail2ban && systemctl start fail2ban
 systemctl enable docker && systemctl start docker
 usermod -aG docker $DEPLOY_USER
 
+echo "=== 6. Verify SSH on port $SSH_PORT ==="
+if ss -tlnp | grep -q ":$SSH_PORT"; then
+  echo "SSH is listening on port $SSH_PORT — closing port 22"
+  ufw delete allow 22/tcp
+  ufw reload
+else
+  echo "WARNING: SSH does not appear to be listening on port $SSH_PORT"
+  echo "Port 22 left open as fallback. Investigate before closing it."
+  echo "  ss -tlnp | grep sshd"
+fi
+
 echo "=== DONE ==="
-echo "SSH on port $SSH_PORT"
 echo "Connect: ssh -p $SSH_PORT $DEPLOY_USER@$VPS_IP"
-echo ""
-echo "After confirming $SSH_PORT works, close port 22:"
-echo "  ufw delete allow 22/tcp"
