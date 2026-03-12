@@ -321,7 +321,7 @@ set_default_zsh() {
         if ! grep -qx "$zsh_path" /etc/shells 2>/dev/null; then
             echo "$zsh_path" | sudo tee -a /etc/shells >/dev/null
         fi
-        sudo chsh -s "$zsh_path" "$(whoami)" 2>/dev/null || chsh -s "$zsh_path" 2>/dev/null || true
+        sudo chsh -s "$zsh_path" "$REAL_USER" 2>/dev/null || chsh -s "$zsh_path" 2>/dev/null || true
     fi
 }
 
