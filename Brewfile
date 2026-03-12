@@ -40,6 +40,7 @@ brew "docker-buildx"
 
 # Neovim
 brew "neovim"
+brew "tree-sitter"
 
 # Doppler
 brew "doppler"
