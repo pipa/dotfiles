@@ -3,10 +3,10 @@
 DOTFILES_DIR="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
 export DOTFILES_DIR
 
-# When run via sudo, HOME becomes /root. Resolve the real user's home instead.
+# When run via sudo, HOME becomes /root. Resolve the real user's home for dotfiles.
 REAL_USER="${SUDO_USER:-$(whoami)}"
 REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
-export HOME="$REAL_HOME"
+export REAL_HOME REAL_USER
 
 OS="$(uname -s)"
 LOG_FILE="/tmp/dotfiles-setup-$$.log"
@@ -138,9 +138,9 @@ start_animation
 # Backup existing dotfiles
 # ═══════════════════════════════════════════
 set_step "Checking existing dotfiles"
-BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d%H%M%S)"
+BACKUP_DIR="$REAL_HOME/.dotfiles-backup-$(date +%Y%m%d%H%M%S)"
 NEED_BACKUP=false
-for f in "$HOME/.zshrc" "$HOME/.aliases" "$HOME/.gitconfig" "$HOME/.config/starship.toml"; do
+for f in "$REAL_HOME/.zshrc" "$REAL_HOME/.aliases" "$REAL_HOME/.gitconfig" "$REAL_HOME/.config/starship.toml"; do
     if [[ -f "$f" && ! -L "$f" ]]; then
         NEED_BACKUP=true
         break
@@ -148,7 +148,7 @@ for f in "$HOME/.zshrc" "$HOME/.aliases" "$HOME/.gitconfig" "$HOME/.config/stars
 done
 if $NEED_BACKUP; then
     mkdir -p "$BACKUP_DIR"
-    for f in "$HOME/.zshrc" "$HOME/.aliases" "$HOME/.gitconfig" "$HOME/.config/starship.toml"; do
+    for f in "$REAL_HOME/.zshrc" "$REAL_HOME/.aliases" "$REAL_HOME/.gitconfig" "$REAL_HOME/.config/starship.toml"; do
         if [[ -f "$f" && ! -L "$f" ]]; then
             cp "$f" "$BACKUP_DIR/" 2>/dev/null || true
         fi
@@ -157,12 +157,12 @@ if $NEED_BACKUP; then
 fi
 
 # Clean up existing dotfile symlinks
-rm -f "$HOME/.zshrc" "$HOME/.aliases" "$HOME/.gitconfig" 2>/dev/null
-rm -f "$HOME/.config/starship.toml" 2>/dev/null
-rm -f "$HOME/.claude/settings.json" 2>/dev/null
-[[ -L "$HOME/.config/nvim" ]] && rm -f "$HOME/.config/nvim" 2>/dev/null
-rm -rf "$HOME/.local/share/nvim" 2>/dev/null
-rm -rf "$HOME/.cache/nvim" 2>/dev/null
+rm -f "$REAL_HOME/.zshrc" "$REAL_HOME/.aliases" "$REAL_HOME/.gitconfig" 2>/dev/null
+rm -f "$REAL_HOME/.config/starship.toml" 2>/dev/null
+rm -f "$REAL_HOME/.claude/settings.json" 2>/dev/null
+[[ -L "$REAL_HOME/.config/nvim" ]] && rm -f "$REAL_HOME/.config/nvim" 2>/dev/null
+rm -rf "$REAL_HOME/.local/share/nvim" 2>/dev/null
+rm -rf "$REAL_HOME/.cache/nvim" 2>/dev/null
 
 # ═══════════════════════════════════════════
 # OS Dependencies
@@ -176,7 +176,7 @@ fi
 # ═══════════════════════════════════════════
 # Shell — Oh My Zsh
 # ═══════════════════════════════════════════
-if [[ -d "$HOME/.oh-my-zsh" ]]; then
+if [[ -d "$REAL_HOME/.oh-my-zsh" ]]; then
     RESULTS+=("${GREEN}✓${RESET} Oh My Zsh ${DIM}(already installed)${RESET}")
 else
     run_step "Installing Oh My Zsh" \
@@ -186,7 +186,7 @@ fi
 # ═══════════════════════════════════════════
 # Shell — Zsh plugins
 # ═══════════════════════════════════════════
-ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
+ZSH_CUSTOM="$REAL_HOME/.oh-my-zsh/custom"
 install_zsh_plugins() {
     local changed=false
     if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]]; then
@@ -237,7 +237,7 @@ else
         sh -c "curl -fsSL https://fnm.vercel.app/install | bash"
 fi
 
-export PATH="$HOME/.local/share/fnm:$PATH"
+export PATH="$REAL_HOME/.local/share/fnm:$PATH"
 if command -v fnm &> /dev/null; then
     eval "$(fnm env --shell bash)"
 fi
@@ -293,14 +293,14 @@ fi
 # LazyVim
 # ═══════════════════════════════════════════
 install_lazyvim() {
-    local nvim_config="$HOME/.config/nvim"
+    local nvim_config="$REAL_HOME/.config/nvim"
     mkdir -p "$nvim_config"
     rm -rf "$nvim_config/.git"
     git clone --depth 1 https://github.com/LazyVim/starter "$nvim_config"
     rm -rf "$nvim_config/.git"
 }
 
-if [[ -f "$HOME/.config/nvim/init.lua" ]]; then
+if [[ -f "$REAL_HOME/.config/nvim/init.lua" ]]; then
     RESULTS+=("${GREEN}✓${RESET} LazyVim ${DIM}(already installed)${RESET}")
 else
     run_step "Installing LazyVim" install_lazyvim

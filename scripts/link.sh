@@ -6,6 +6,9 @@ if [[ -z "$DOTFILES_DIR" ]]; then
   DOTFILES_DIR="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/.." && pwd)"
 fi
 
+# Use REAL_HOME if exported by setup.sh, otherwise fall back to HOME
+REAL_HOME="${REAL_HOME:-$REAL_HOME}"
+
 echo "Linking dotfiles to home directory..."
 
 # Function to create symlink
@@ -29,12 +32,12 @@ link_file() {
 }
 
 # Link dotfiles
-link_file "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
-link_file "$DOTFILES_DIR/.aliases" "$HOME/.aliases"
-link_file "$DOTFILES_DIR/.gitconfig" "$HOME/.gitconfig"
-link_file "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
-link_file "$DOTFILES_DIR/.config/nvim" "$HOME/.config/nvim"
-link_file "$DOTFILES_DIR/.claude/settings.json" "$HOME/.claude/settings.json"
+link_file "$DOTFILES_DIR/.zshrc" "$REAL_HOME/.zshrc"
+link_file "$DOTFILES_DIR/.aliases" "$REAL_HOME/.aliases"
+link_file "$DOTFILES_DIR/.gitconfig" "$REAL_HOME/.gitconfig"
+link_file "$DOTFILES_DIR/.config/starship.toml" "$REAL_HOME/.config/starship.toml"
+link_file "$DOTFILES_DIR/.config/nvim" "$REAL_HOME/.config/nvim"
+link_file "$DOTFILES_DIR/.claude/settings.json" "$REAL_HOME/.claude/settings.json"
 
 echo "Dotfiles linked successfully!"
 echo ""
