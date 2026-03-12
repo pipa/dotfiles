@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Bail early if not running as root / via sudo
+if [[ $EUID -ne 0 ]]; then
+  echo "This script needs sudo. Run: sudo bash setup.sh"
+  exit 1
+fi
+
 DOTFILES_DIR="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
 export DOTFILES_DIR
 
