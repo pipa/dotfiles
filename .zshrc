@@ -1,3 +1,6 @@
+# ── Minimal safe PATH setup (ensures login always works) ──
+export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
 # Enable Powerlevel10k instant prompt
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
@@ -24,9 +27,9 @@ plugins=(
 
 # Load Oh My Zsh
 export ZSH="$HOME/.oh-my-zsh"
-
-# Source Oh My Zsh (keep this at the bottom)
-source $ZSH/oh-my-zsh.sh
+if [[ -d "$ZSH" ]]; then
+    source "$ZSH/oh-my-zsh.sh"
+fi
 
 # Load aliases
 if [[ -f ~/.aliases ]]; then
@@ -34,15 +37,21 @@ if [[ -f ~/.aliases ]]; then
 fi
 
 # Starship prompt
-export STARSHIP_CONFIG=~/.config/starship.toml
-eval "$(starship init zsh)"
+if command -v starship &> /dev/null; then
+    export STARSHIP_CONFIG=~/.config/starship.toml
+    eval "$(starship init zsh)"
+fi
 
 # fnm
 export PATH="$HOME/.local/share/fnm:$PATH"
-eval "$(fnm env)"
+if command -v fnm &> /dev/null; then
+    eval "$(fnm env)"
+fi
 
 # zoxide
-eval "$(zoxide init zsh)"
+if command -v zoxide &> /dev/null; then
+    eval "$(zoxide init zsh)"
+fi
 
 # fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -73,7 +82,9 @@ export LC_ALL="en_US.UTF-8"
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="/usr/local/bin:$PATH"
-export PATH="/opt/homebrew/bin:$PATH"
+[[ -d "/opt/homebrew/bin" ]] && export PATH="/opt/homebrew/bin:$PATH"
+[[ -d "/opt/nvim-linux-x86_64/bin" ]] && export PATH="/opt/nvim-linux-x86_64/bin:$PATH"
+[[ -d "/opt/nvim-macos-arm64/bin" ]] && export PATH="/opt/nvim-macos-arm64/bin:$PATH"
 
 # Enable color support
 export CLICOLOR=1

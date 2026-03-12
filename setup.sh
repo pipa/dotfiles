@@ -81,6 +81,25 @@ print_header
 echo "Detected: $OS ($DISTRO)"
 echo ""
 
+# Backup existing dotfiles before overwriting
+BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d%H%M%S)"
+NEED_BACKUP=false
+for f in "$HOME/.zshrc" "$HOME/.aliases" "$HOME/.gitconfig" "$HOME/.config/starship.toml"; do
+    if [[ -f "$f" && ! -L "$f" ]]; then
+        NEED_BACKUP=true
+        break
+    fi
+done
+if $NEED_BACKUP; then
+    mkdir -p "$BACKUP_DIR"
+    for f in "$HOME/.zshrc" "$HOME/.aliases" "$HOME/.gitconfig" "$HOME/.config/starship.toml"; do
+        if [[ -f "$f" && ! -L "$f" ]]; then
+            cp "$f" "$BACKUP_DIR/" 2>/dev/null || true
+        fi
+    done
+    echo "Backed up existing dotfiles to: $BACKUP_DIR"
+fi
+
 # Clean up existing dotfile symlinks first
 rm -f "$HOME/.zshrc" "$HOME/.aliases" "$HOME/.gitconfig" 2>/dev/null
 rm -f "$HOME/.config/starship.toml" 2>/dev/null
@@ -97,7 +116,11 @@ rm -rf "$HOME/.cache/nvim" 2>/dev/null
 # OS Setup
 # ═══════════════════════════════════════════
 print_section "OS Dependencies"
-run_step "Setting up macOS" bash "$DOTFILES_DIR/install/macos.sh"
+if [[ "$OS" == "Darwin" ]]; then
+    run_step "Setting up macOS" bash "$DOTFILES_DIR/install/macos.sh"
+elif [[ "$OS" == "Linux" ]]; then
+    run_step "Setting up Linux" bash "$DOTFILES_DIR/install/linux.sh"
+fi
 
 # ═══════════════════════════════════════════
 # Shell Setup
@@ -178,7 +201,19 @@ run_step "Installing Neovim" \
     test -x "$(command -v nvim)"
 
 if ! command -v nvim &> /dev/null; then
-    brew install --cask neovim-nightly 2>/dev/null || brew install neovim
+    if [[ "$OS" == "Darwin" ]]; then
+        curl -sLO https://github.com/neovim/neovim/releases/download/nightly/nvim-macos-arm64.tar.gz
+        sudo rm -rf /opt/nvim-macos-arm64
+        sudo tar -C /opt -xzf nvim-macos-arm64.tar.gz
+        rm -f nvim-macos-arm64.tar.gz
+        sudo ln -sf /opt/nvim-macos-arm64/bin/nvim /usr/local/bin/nvim
+    elif [[ "$OS" == "Linux" ]]; then
+        curl -sLO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
+        sudo rm -rf /opt/nvim-linux-x86_64
+        sudo tar -C /opt -xzf nvim-linux-x86_64.tar.gz
+        rm -f nvim-linux-x86_64.tar.gz
+        sudo ln -sf /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim
+    fi
 fi
 
 run_step "Installing LazyVim" \
@@ -203,7 +238,14 @@ run_step "Setting zsh as default shell" \
     [[ "$SHELL" == *"zsh" ]]
 
 if [[ "$SHELL" != *"zsh" ]]; then
-    sudo chsh -s /bin/zsh 2>/dev/null || chsh -s /bin/zsh 2>/dev/null || true
+    ZSH_PATH="$(command -v zsh)"
+    if [[ -n "$ZSH_PATH" ]]; then
+        # Ensure zsh is in /etc/shells
+        if ! grep -qx "$ZSH_PATH" /etc/shells 2>/dev/null; then
+            echo "$ZSH_PATH" | sudo tee -a /etc/shells >/dev/null
+        fi
+        sudo chsh -s "$ZSH_PATH" "$(whoami)" 2>/dev/null || chsh -s "$ZSH_PATH" 2>/dev/null || true
+    fi
 fi
 
 # ═══════════════════════════════════════════
