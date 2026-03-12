@@ -32,6 +32,7 @@ sed -i 's/^#*PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_con
 sshd -t
 
 echo "=== 4. UFW firewall ==="
+ufw allow 22/tcp   # Keep as fallback until 2222 works
 ufw allow $SSH_PORT/tcp
 ufw allow 80/tcp
 ufw allow 443/tcp
