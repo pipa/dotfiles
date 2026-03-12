@@ -23,13 +23,22 @@ apt install -y curl wget git zsh build-essential pkg-config libssl-dev unzip ufw
 
 echo "=== 3. SSH hardening ==="
 mkdir -p /run/sshd
-cp /etc/ssh/sshd_config.backup /etc/ssh/sshd_config 2>/dev/null || true
-sed -i "s/^Port.*/Port $SSH_PORT/" /etc/ssh/sshd_config
-grep -q "^Port $SSH_PORT" /etc/ssh/sshd_config || echo "Port $SSH_PORT" >> /etc/ssh/sshd_config
+
+# Clean any existing sshd processes
+pkill -9 sshd 2>/dev/null || true
+
+# Ensure only one Port line
+sed -i '/^Port/d' /etc/ssh/sshd_config
+echo "Port $SSH_PORT" >> /etc/ssh/sshd_config
+
+# Harden SSH
 sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 sed -i 's/^#*PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+
+# Verify and start
 sshd -t
+/usr/sbin/sshd
 
 echo "=== 4. UFW firewall ==="
 ufw allow 22/tcp   # Keep as fallback until 2222 works
@@ -39,7 +48,7 @@ ufw allow 443/tcp
 ufw default deny incoming
 ufw default allow outgoing
 ufw --force enable
-systemctl restart ssh
+
 systemctl enable ssh
 
 echo "=== 5. fail2ban + Docker ==="
@@ -47,10 +56,12 @@ systemctl enable fail2ban && systemctl start fail2ban
 systemctl enable docker && systemctl start docker
 usermod -aG docker $DEPLOY_USER
 
-echo "=== 6. Dotfiles + Vermogen ==="
-su - $DEPLOY_USER -c "git clone https://github.com/pipa/dotfiles.git ~/dotfiles"
-su - $DEPLOY_USER -c "cd ~/dotfiles && ./setup.sh"
+echo "=== 6. Clone Vermogen ==="
 su - $DEPLOY_USER -c "git clone git@github.com:LuMatRod/patrimonio.git /opt/patrimonio"
 
 echo "=== DONE ==="
-echo "ssh -p $SSH_PORT $DEPLOY_USER@$VPS_IP"
+echo "SSH on port $SSH_PORT"
+echo "Connect: ssh -p $SSH_PORT $DEPLOY_USER@$VPS_IP"
+echo ""
+echo "After confirming 2222 works, close port 22:"
+echo "  ufw delete allow 22/tcp"
