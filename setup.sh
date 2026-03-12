@@ -2,6 +2,12 @@
 
 DOTFILES_DIR="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
 export DOTFILES_DIR
+
+# When run via sudo, HOME becomes /root. Resolve the real user's home instead.
+REAL_USER="${SUDO_USER:-$(whoami)}"
+REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
+export HOME="$REAL_HOME"
+
 OS="$(uname -s)"
 LOG_FILE="/tmp/dotfiles-setup-$$.log"
 STEP_FILE="/tmp/dotfiles-step-$$"
