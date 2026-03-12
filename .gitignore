@@ -45,3 +45,14 @@ spell/
 tmp/
 temp/
 .cache/
+
+# Claude Code (local session data)
+.claude/backups/
+.claude/cache/
+.claude/file-history/
+.claude/history.jsonl
+.claude/plans/
+.claude/projects/
+.claude/session-env/
+.claude/shell-snapshots/
+.claude/settings.local.json

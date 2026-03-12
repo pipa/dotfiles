@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:json.schemastore.org)",
-      "WebFetch(domain:www.schemastore.org)"
+      "WebFetch(domain:www.schemastore.org)",
+      "Bash(cat >> /Users/luismatute/Developer/dotfiles/.config/starship.toml << 'EOF'\n\n[env_var.SSH_CONNECTION]\nvariable = \"SSH_CONNECTION\"\nstyle = 'bg:color_bright_red'\nformat = '[[ 󰒍 SSH ]\\(fg:color_fg0 bg:color_bright_red\\)]\\($style\\)'\nEOF)"
     ]
   }
 }
