@@ -235,7 +235,7 @@ gdiff() {
 }
 
 # Create git branch and switch to it
-gcb() {
+create-branch() {
     git checkout -b "$1"
 }
 
