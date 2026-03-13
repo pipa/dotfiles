@@ -218,7 +218,32 @@ setup_services() {
 run_step "Starting fail2ban + Docker" setup_services
 
 # ═══════════════════════════════════════════
-# 6. Doppler CLI
+# 6. Swap file (2GB)
+# ═══════════════════════════════════════════
+setup_swap() {
+    if swapon --show | grep -q '/swapfile'; then
+        return 0  # already active
+    fi
+    if [[ ! -f /swapfile ]]; then
+        fallocate -l 2G /swapfile
+        chmod 600 /swapfile
+        mkswap /swapfile
+    fi
+    swapon /swapfile
+    if ! grep -q '/swapfile' /etc/fstab; then
+        echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    fi
+    # Tune swappiness: 10 is better for servers than the default 60
+    sysctl -w vm.swappiness=10
+    if ! grep -q 'vm.swappiness' /etc/sysctl.conf; then
+        echo 'vm.swappiness=10' >> /etc/sysctl.conf
+    fi
+}
+
+run_step "Configuring swap (2GB, swappiness=10)" setup_swap
+
+# ═══════════════════════════════════════════
+# 7. Doppler CLI
 # ═══════════════════════════════════════════
 if command -v doppler &>/dev/null; then
     RESULTS+=("${GREEN}✓${RESET} Doppler CLI ${DIM}(already installed)${RESET}")
@@ -227,7 +252,7 @@ else
 fi
 
 # ═══════════════════════════════════════════
-# 7. Project directory
+# 8. Project directory
 # ═══════════════════════════════════════════
 setup_project_dir() {
     mkdir -p "$PROJECT_DIR"
@@ -241,7 +266,7 @@ else
 fi
 
 # ═══════════════════════════════════════════
-# 8. Deploy SSH key
+# 9. Deploy SSH key
 # ═══════════════════════════════════════════
 DEPLOY_KEY_PATH="/home/$DEPLOY_USER/.ssh/github_deploy"
 
@@ -270,7 +295,7 @@ else
 fi
 
 # ═══════════════════════════════════════════
-# 9. zsh as default shell for deploy
+# 10. zsh as default shell for deploy
 # ═══════════════════════════════════════════
 run_step "Setting zsh as default shell for $DEPLOY_USER" chsh -s "$(which zsh)" "$DEPLOY_USER"
 
@@ -328,7 +353,7 @@ printf "     ${BOLD}chmod 600 .env${RESET}\n"
 echo ""
 printf "  ${DIM}5.${RESET} First deploy:\n"
 printf "     ${BOLD}cd ${PROJECT_DIR}${RESET}\n"
-printf "     ${BOLD}docker compose build --no-cache web${RESET}\n"
+printf "     ${BOLD}DOCKER_BUILDKIT=1 docker compose build web${RESET}\n"
 printf "     ${BOLD}docker compose up -d${RESET}\n"
 printf "     ${BOLD}docker compose --profile migrate run --rm migrate${RESET}\n"
 echo ""
