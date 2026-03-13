@@ -243,7 +243,7 @@ else
         sh -c "curl -fsSL https://fnm.vercel.app/install | bash"
 fi
 
-export PATH="$REAL_HOME/.local/share/fnm:$PATH"
+export PATH="$HOME/.local/share/fnm:$REAL_HOME/.local/share/fnm:$PATH"
 if command -v fnm &> /dev/null; then
     eval "$(fnm env --shell bash)"
 fi
