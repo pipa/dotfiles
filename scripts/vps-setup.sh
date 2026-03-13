@@ -6,6 +6,29 @@ DEPLOY_USER=deploy
 VPS_IP=188.166.125.128
 
 # ═══════════════════════════════════════════
+# Bail if not root (early, before TUI loads)
+# ═══════════════════════════════════════════
+if [[ $EUID -ne 0 ]]; then
+    echo "Run as root: sudo bash vps-setup.sh"
+    exit 1
+fi
+
+# ═══════════════════════════════════════════
+# Project prompt (before animation starts)
+# ═══════════════════════════════════════════
+clear
+echo ""
+printf "  \033[1mvps-setup\033[0m \033[2m—\033[0m server bootstrap\n"
+echo ""
+
+read -rp "  Project name (e.g. patrimonio): " PROJECT_NAME
+read -rp "  GitHub repo (e.g. LuMatRod/patrimonio): " GITHUB_REPO
+
+PROJECT_DIR="/opt/${PROJECT_NAME}"
+
+echo ""
+
+# ═══════════════════════════════════════════
 # TUI — bouncing progress bar (ported from setup.sh)
 # ═══════════════════════════════════════════
 BAR_WIDTH=30
@@ -93,20 +116,7 @@ run_step() {
     fi
 }
 
-# ═══════════════════════════════════════════
-# Bail if not root
-# ═══════════════════════════════════════════
-if [[ $EUID -ne 0 ]]; then
-    echo "Run as root: sudo bash vps-setup.sh"
-    exit 1
-fi
-
 : > "$LOG_FILE"
-
-clear
-echo ""
-printf "  ${BOLD}vps-setup${RESET} ${DIM}—${RESET} server bootstrap\n"
-echo ""
 
 start_animation
 
@@ -208,7 +218,21 @@ else
 fi
 
 # ═══════════════════════════════════════════
-# 7. zsh as default shell for deploy
+# 7. Project directory
+# ═══════════════════════════════════════════
+setup_project_dir() {
+    mkdir -p "$PROJECT_DIR"
+    chown "$DEPLOY_USER:$DEPLOY_USER" "$PROJECT_DIR"
+}
+
+if [[ -d "$PROJECT_DIR" ]]; then
+    RESULTS+=("${GREEN}✓${RESET} Project dir ${DIM}($PROJECT_DIR already exists)${RESET}")
+else
+    run_step "Creating $PROJECT_DIR" setup_project_dir
+fi
+
+# ═══════════════════════════════════════════
+# 8. zsh as default shell for deploy
 # ═══════════════════════════════════════════
 run_step "Setting zsh as default shell for $DEPLOY_USER" chsh -s "$(which zsh)" "$DEPLOY_USER"
 
@@ -240,29 +264,27 @@ echo ""
 printf "  ${DIM}2.${RESET} Generate a deploy SSH key (used for GitHub → VPS and VPS → GitHub):\n"
 printf "     ${BOLD}ssh-keygen -t ed25519 -C \"deploy@vps\" -f ~/.ssh/github_deploy -N \"\"${RESET}\n"
 printf "     Then add ${BOLD}~/.ssh/github_deploy.pub${RESET} to:\n"
-printf "       • GitHub repo ${DIM}→${RESET} Settings ${DIM}→${RESET} Deploy keys (read-only)\n"
+printf "       • github.com/${GITHUB_REPO} ${DIM}→${RESET} Settings ${DIM}→${RESET} Deploy keys (read-only)\n"
 printf "       • ${BOLD}~/.ssh/authorized_keys${RESET} on this VPS\n"
-printf "     And add ${BOLD}~/.ssh/github_deploy${RESET} (private) to GitHub repo secrets as ${BOLD}DEPLOY_SSH_KEY${RESET}.\n"
+printf "     Add ${BOLD}~/.ssh/github_deploy${RESET} (private) to GitHub repo secrets as ${BOLD}DEPLOY_SSH_KEY${RESET}.\n"
 printf "     Configure SSH to use it:\n"
 printf "     ${BOLD}printf 'Host github.com\\n  IdentityFile ~/.ssh/github_deploy\\n  StrictHostKeyChecking accept-new\\n' >> ~/.ssh/config${RESET}\n"
 echo ""
-printf "  ${DIM}3.${RESET} Create app directory and hand it to deploy:\n"
-printf "     ${BOLD}sudo mkdir -p /opt/patrimonio && sudo chown deploy:deploy /opt/patrimonio${RESET}\n"
+printf "  ${DIM}3.${RESET} Clone the repo (dir already created at $PROJECT_DIR):\n"
+printf "     ${BOLD}git clone git@github.com:${GITHUB_REPO}.git ${PROJECT_DIR}${RESET}\n"
 echo ""
-printf "  ${DIM}4.${RESET} Clone the repo:\n"
-printf "     ${BOLD}git clone git@github.com:LuMatRod/patrimonio.git /opt/patrimonio${RESET}\n"
-echo ""
-printf "  ${DIM}5.${RESET} Pull secrets from Doppler (run as deploy):\n"
+printf "  ${DIM}4.${RESET} Pull secrets from Doppler (run as $DEPLOY_USER):\n"
 printf "     ${BOLD}doppler login${RESET}\n"
-printf "     ${BOLD}cd /opt/patrimonio && doppler secrets download --no-file --format env --project patrimonio --config prd > .env${RESET}\n"
+printf "     ${BOLD}cd ${PROJECT_DIR} && doppler secrets download --no-file --format env --project ${PROJECT_NAME} --config prd > .env${RESET}\n"
 printf "     ${BOLD}chmod 600 .env${RESET}\n"
 echo ""
-printf "  ${DIM}6.${RESET} First deploy:\n"
+printf "  ${DIM}5.${RESET} First deploy:\n"
+printf "     ${BOLD}cd ${PROJECT_DIR}${RESET}\n"
 printf "     ${BOLD}docker compose build --no-cache web${RESET}\n"
 printf "     ${BOLD}docker compose up -d${RESET}\n"
 printf "     ${BOLD}docker compose --profile migrate run --rm migrate${RESET}\n"
 echo ""
-printf "  ${DIM}7.${RESET} Update GitHub Actions secrets:\n"
+printf "  ${DIM}6.${RESET} Update GitHub Actions secrets:\n"
 printf "     ${DIM}DEPLOY_HOST${RESET}    → $VPS_IP\n"
 printf "     ${DIM}DEPLOY_USER${RESET}    → $DEPLOY_USER\n"
 printf "     ${DIM}DEPLOY_SSH_KEY${RESET} → contents of ~/.ssh/github_deploy\n"
