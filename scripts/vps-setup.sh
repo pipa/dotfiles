@@ -38,6 +38,9 @@ apt update
 apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 echo "=== 3. SSH hardening ==="
+# Required on some fresh Ubuntu installs — sshd won't restart without it
+mkdir -p /run/sshd
+
 # Ensure only one Port line
 sed -i '/^Port/d' /etc/ssh/sshd_config
 echo "Port $SSH_PORT" >> /etc/ssh/sshd_config
@@ -80,6 +83,9 @@ else
   echo "Port 22 left open as fallback. Investigate before closing it."
   echo "  ss -tlnp | grep sshd"
 fi
+
+echo "=== 7. Set zsh as default shell for $DEPLOY_USER ==="
+chsh -s "$(which zsh)" "$DEPLOY_USER"
 
 echo "=== DONE ==="
 echo "Connect: ssh -p $SSH_PORT $DEPLOY_USER@$VPS_IP"
