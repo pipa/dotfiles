@@ -18,7 +18,16 @@ fi
 # ═══════════════════════════════════════════
 clear
 echo ""
-printf "  \033[1mvps-setup\033[0m \033[2m—\033[0m server bootstrap\n"
+printf "\033[36m"
+printf "      ▄▄   ▄▄     \n"
+printf "     ▐████████▌    \n"
+printf "    ▐██▀▄▄▄▀██▌    \n"
+printf "   ▗████   ████▖   \n"
+printf "   ▐▘ ▝▀███▀▝ ▝▌   \n"
+printf "       ▌   ▌       \n"
+printf "\033[0m"
+echo ""
+printf "  \033[1mvps-setup\033[0m  \033[2m—  server bootstrap\033[0m\n"
 echo ""
 
 read -rp "  Project name (e.g. patrimonio): " PROJECT_NAME
