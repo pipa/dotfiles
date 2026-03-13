@@ -84,8 +84,12 @@ else
   echo "  ss -tlnp | grep sshd"
 fi
 
-echo "=== 7. Set zsh as default shell for $DEPLOY_USER ==="
+echo "=== 7. Install Doppler CLI ==="
+curl -Ls https://cli.doppler.com/install.sh | sh
+
+echo "=== 8. Set zsh as default shell for $DEPLOY_USER ==="
 chsh -s "$(which zsh)" "$DEPLOY_USER"
 
 echo "=== DONE ==="
+echo "Run: doppler login && doppler secrets download ..."
 echo "Connect: ssh -p $SSH_PORT $DEPLOY_USER@$VPS_IP"
