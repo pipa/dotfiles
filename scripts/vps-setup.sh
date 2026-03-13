@@ -247,9 +247,14 @@ DEPLOY_KEY_PATH="/home/$DEPLOY_USER/.ssh/github_deploy"
 
 generate_deploy_key() {
     sudo -u "$DEPLOY_USER" ssh-keygen -t ed25519 -C "deploy@vps" -f "$DEPLOY_KEY_PATH" -N ""
-    # Add to authorized_keys so GitHub Actions can SSH in with the same key
-    cat "${DEPLOY_KEY_PATH}.pub" >> "/home/$DEPLOY_USER/.ssh/authorized_keys"
+    # Ensure .ssh dir and authorized_keys exist with correct permissions
+    mkdir -p "/home/$DEPLOY_USER/.ssh"
+    touch "/home/$DEPLOY_USER/.ssh/authorized_keys"
+    chmod 700 "/home/$DEPLOY_USER/.ssh"
     chmod 600 "/home/$DEPLOY_USER/.ssh/authorized_keys"
+    chown -R "$DEPLOY_USER:$DEPLOY_USER" "/home/$DEPLOY_USER/.ssh"
+    # Add public key so GitHub Actions can SSH in with this key
+    cat "${DEPLOY_KEY_PATH}.pub" >> "/home/$DEPLOY_USER/.ssh/authorized_keys"
     # Configure SSH to use it for GitHub
     sudo -u "$DEPLOY_USER" bash -c "cat >> ~/.ssh/config << 'EOF'
 Host github.com
