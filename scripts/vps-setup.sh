@@ -232,7 +232,31 @@ else
 fi
 
 # ═══════════════════════════════════════════
-# 8. zsh as default shell for deploy
+# 8. Deploy SSH key
+# ═══════════════════════════════════════════
+DEPLOY_KEY_PATH="/home/$DEPLOY_USER/.ssh/github_deploy"
+
+generate_deploy_key() {
+    sudo -u "$DEPLOY_USER" ssh-keygen -t ed25519 -C "deploy@vps" -f "$DEPLOY_KEY_PATH" -N ""
+    # Add to authorized_keys so GitHub Actions can SSH in with the same key
+    cat "${DEPLOY_KEY_PATH}.pub" >> "/home/$DEPLOY_USER/.ssh/authorized_keys"
+    chmod 600 "/home/$DEPLOY_USER/.ssh/authorized_keys"
+    # Configure SSH to use it for GitHub
+    sudo -u "$DEPLOY_USER" bash -c "cat >> ~/.ssh/config << 'EOF'
+Host github.com
+  IdentityFile ~/.ssh/github_deploy
+  StrictHostKeyChecking accept-new
+EOF"
+}
+
+if [[ -f "$DEPLOY_KEY_PATH" ]]; then
+    RESULTS+=("${GREEN}✓${RESET} Deploy SSH key ${DIM}(already exists)${RESET}")
+else
+    run_step "Generating deploy SSH key" generate_deploy_key
+fi
+
+# ═══════════════════════════════════════════
+# 9. zsh as default shell for deploy
 # ═══════════════════════════════════════════
 run_step "Setting zsh as default shell for $DEPLOY_USER" chsh -s "$(which zsh)" "$DEPLOY_USER"
 
@@ -261,14 +285,24 @@ echo ""
 printf "  ${DIM}1.${RESET} SSH in as deploy:\n"
 printf "     ${BOLD}ssh -p $SSH_PORT $DEPLOY_USER@$VPS_IP${RESET}\n"
 echo ""
-printf "  ${DIM}2.${RESET} Generate a deploy SSH key (used for GitHub → VPS and VPS → GitHub):\n"
-printf "     ${BOLD}ssh-keygen -t ed25519 -C \"deploy@vps\" -f ~/.ssh/github_deploy -N \"\"${RESET}\n"
-printf "     Then add ${BOLD}~/.ssh/github_deploy.pub${RESET} to:\n"
-printf "       • github.com/${GITHUB_REPO} ${DIM}→${RESET} Settings ${DIM}→${RESET} Deploy keys (read-only)\n"
-printf "       • ${BOLD}~/.ssh/authorized_keys${RESET} on this VPS\n"
-printf "     Add ${BOLD}~/.ssh/github_deploy${RESET} (private) to GitHub repo secrets as ${BOLD}DEPLOY_SSH_KEY${RESET}.\n"
-printf "     Configure SSH to use it:\n"
-printf "     ${BOLD}printf 'Host github.com\\n  IdentityFile ~/.ssh/github_deploy\\n  StrictHostKeyChecking accept-new\\n' >> ~/.ssh/config${RESET}\n"
+printf "  ${DIM}2.${RESET} Add the deploy public key to GitHub in two places:\n"
+echo ""
+printf "     ${BOLD}A) github.com/${GITHUB_REPO} → Settings → Deploy keys${RESET} (read-only)\n"
+printf "     ${BOLD}B) github.com/${GITHUB_REPO} → Settings → Secrets → DEPLOY_SSH_KEY${RESET} (paste the private key below)\n"
+echo ""
+printf "     ${CYAN}${BOLD}Public key:${RESET}\n"
+if [[ -f "${DEPLOY_KEY_PATH}.pub" ]]; then
+    printf "     %s\n" "$(cat "${DEPLOY_KEY_PATH}.pub")"
+else
+    printf "     ${RED}(key not found at ${DEPLOY_KEY_PATH}.pub)${RESET}\n"
+fi
+echo ""
+printf "     ${CYAN}${BOLD}Private key (for DEPLOY_SSH_KEY secret):${RESET}\n"
+if [[ -f "$DEPLOY_KEY_PATH" ]]; then
+    cat "$DEPLOY_KEY_PATH"
+else
+    printf "     ${RED}(key not found at ${DEPLOY_KEY_PATH})${RESET}\n"
+fi
 echo ""
 printf "  ${DIM}3.${RESET} Clone the repo (dir already created at $PROJECT_DIR):\n"
 printf "     ${BOLD}git clone git@github.com:${GITHUB_REPO}.git ${PROJECT_DIR}${RESET}\n"
