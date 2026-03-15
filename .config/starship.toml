@@ -64,7 +64,7 @@ color_muddy_green = '#83a598'
 [os]
 disabled = false
 style = "bg:color_orange fg:color_fg0"
-format = "[ $symbol ]($style)"
+format = "[ $symbol]($style)"
 
 [battery]
 disabled = false
