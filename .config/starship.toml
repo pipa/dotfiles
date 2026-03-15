@@ -229,4 +229,4 @@ format = '[[ $symbol $number ](fg:color_fg0 bg:color_yellow)]($style)'
 [custom.ssh]
 command = "echo '󰒍 SSH'"
 when = '[ -n "$SSH_CONNECTION" ]'
-format = '[](fg:color_bright_red)[ $output ](fg:color_fg0 bg:color_bright_red)[](fg:color_bright_red)'
+format = '[](fg:color_bright_red)[ $output ](fg:color_fg0 bg:color_bright_red)[](fg:color_bright_red) '
