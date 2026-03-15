@@ -139,3 +139,7 @@ LazyVim default keymaps plus custom ones:
 ## License
 
 MIT
+
+---
+
+*Last updated: 2026-03-15*
