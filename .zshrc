@@ -94,10 +94,6 @@ export LSCOLORS=ExFxBxDxCxegedabagacad
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 
-# Auto correct
-setopt CORRECT
-setopt CORRECT_ALL
-
 # Auto cd
 setopt AUTO_CD
 
@@ -106,17 +102,6 @@ setopt SHARE_HISTORY
 setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_IGNORE_SPACE
 setopt HIST_VERIFY
-
-# Enable vi mode
-bindkey -v
-
-# Use emacs keybindings for incremental search (default)
-bindkey '^R' history-incremental-search-backward
-bindkey '^S' history-incremental-search-forward
-
-# Better backward-kill-word
-bindkey '^W' backward-kill-word
-bindkey '^U' kill-line
 
 # Enable 256 colors
 export TERM="xterm-256color"
