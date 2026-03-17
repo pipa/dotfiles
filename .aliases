@@ -2,12 +2,19 @@
 # General Shortcuts
 # ===========================================
 
-# Modern ls alternatives
-alias ls='eza --icons'
-alias la='eza -la --icons'
-alias ll='eza -la --icons'
-alias l='eza --icons'
-alias tree='eza --tree'
+# Modern ls alternatives (eza with fallback to ls)
+if command -v eza &> /dev/null; then
+    alias ls='eza --icons'
+    alias la='eza -la --icons'
+    alias ll='eza -la --icons'
+    alias l='eza --icons'
+    alias tree='eza --tree'
+else
+    alias ls='ls --color=auto'
+    alias la='ls -la --color=auto'
+    alias ll='ls -la --color=auto'
+    alias l='ls -l --color=auto'
+fi
 
 # cat alternative
 alias cat='bat'
