@@ -3,14 +3,11 @@
 # ===========================================
 
 # Modern ls alternatives
-alias ll='eza -la --icons'
-alias la='eza -la --icons'
-alias l='eza --icons'
 alias ls='eza --icons'
+alias la='eza -la --icons'
+alias ll='eza -la --icons'
+alias l='eza --icons'
 alias tree='eza --tree'
-
-# Colorize ls
-alias ls='ls --color=auto'
 
 # cat alternative
 alias cat='bat'
@@ -41,13 +38,11 @@ alias gs='git status'
 alias gd='git diff'
 alias gco='git checkout'
 alias gbr='git branch'
-alias glog='git log --oneline --graph --decorate'
+alias glog='git log --oneline --graph --decorate --all'
 alias gm='git merge'
 alias gr='git rebase'
 alias gst='git stash'
 alias gstp='git stash pop'
-alias gdf='git diff'
-alias gco='git checkout'
 alias gcm='git commit -m'
 alias gaa='git add -A'
 alias gnb='git checkout -b'
@@ -66,7 +61,7 @@ alias sv='sudo nvim'
 
 # Open files in nvim
 alias n='nvim'
-alias nt='nvim .'
+alias nv='nvim .'
 
 # ===========================================
 # Node/npm/pnpm Aliases
@@ -243,6 +238,53 @@ create-branch() {
 gbclean() {
     git branch --merged main | grep -v "main" | xargs -n 1 git branch -d
 }
+
+# ===========================================
+# Navigation
+# ===========================================
+
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias ~='cd ~'
+alias o='open .'
+
+# ===========================================
+# Safety defaults
+# ===========================================
+
+alias cp='cp -i'
+alias mv='mv -i'
+alias rm='rm -i'
+
+# ===========================================
+# Productivity
+# ===========================================
+
+alias c='clear'
+alias h='history | tail -50'
+alias path='echo $PATH | tr ":" "\n"'
+alias ports='lsof -i -P -n | grep LISTEN'
+alias serve='python3 -m http.server 8000'
+alias flushdns='sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder'
+
+# macOS clipboard
+alias copy='pbcopy'
+alias paste='pbpaste'
+
+# fzf helpers
+alias fh='history | fzf'
+alias fkill='ps aux | fzf | awk "{print \$2}" | xargs kill'
+
+# ===========================================
+# Git extras
+# ===========================================
+
+alias gph='git push -u origin HEAD'
+alias gcane='git commit --amend --no-edit'
+alias gundo='git reset --soft HEAD~1'
+alias grh='git reset --hard HEAD'
+alias gclean='git clean -fd'
 
 # ===========================================
 # Zoxide cd shortcuts (auto-jump)
