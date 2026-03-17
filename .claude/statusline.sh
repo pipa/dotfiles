@@ -80,7 +80,7 @@ fi
 cost_info=""
 if [ -n "$session_cost" ] && [ "$session_cost" != "0" ]; then
     formatted_cost=$(printf "%.4f" "$session_cost")
-    cost_info=" ${GRAY}[\${formatted_cost}]${NC}"
+    cost_info=" ${GRAY}[\$$formatted_cost]${NC}"
 fi
 
 # Task count display
