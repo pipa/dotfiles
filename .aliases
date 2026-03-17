@@ -16,11 +16,15 @@ else
     alias l='ls -l --color=auto'
 fi
 
-# cat alternative
-alias cat='bat'
+# cat alternative (bat with fallback)
+if command -v bat &> /dev/null; then
+    alias cat='bat'
+fi
 
-# find alternative
-alias find='fd'
+# find alternative (fd with fallback)
+if command -v fd &> /dev/null; then
+    alias find='fd'
+fi
 
 # grep with colors
 alias grep='grep --color=auto'
@@ -132,12 +136,20 @@ alias dcrestart='docker compose restart'
 # System Aliases
 # ===========================================
 
-# System monitor
-alias top='btop'
-alias htop='btop'
+# System monitor (btop > htop > top)
+if command -v btop &> /dev/null; then
+    alias top='btop'
+    alias htop='btop'
+elif command -v htop &> /dev/null; then
+    alias top='htop'
+fi
 
-# Quick help
-alias cheat='tldr'
+# Quick help (tldr with fallback to man)
+if command -v tldr &> /dev/null; then
+    alias cheat='tldr'
+else
+    alias cheat='man'
+fi
 
 # Create directory and cd into it
 mkcd() {
@@ -254,7 +266,11 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
 alias ~='cd ~'
-alias o='open .'
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    alias o='open .'
+else
+    alias o='xdg-open .'
+fi
 
 # ===========================================
 # Safety defaults
@@ -273,11 +289,16 @@ alias h='history | tail -50'
 alias path='echo $PATH | tr ":" "\n"'
 alias ports='lsof -i -P -n | grep LISTEN'
 alias serve='python3 -m http.server 8000'
-alias flushdns='sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder'
-
-# macOS clipboard
-alias copy='pbcopy'
-alias paste='pbpaste'
+# OS-specific aliases
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    alias flushdns='sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder'
+    alias copy='pbcopy'
+    alias paste='pbpaste'
+else
+    alias flushdns='sudo systemd-resolve --flush-caches'
+    alias copy='xclip -selection clipboard'
+    alias paste='xclip -selection clipboard -o'
+fi
 
 # fzf helpers
 alias fh='history | fzf'
