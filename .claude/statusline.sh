@@ -21,7 +21,11 @@ context_percent=$((current_tokens * 100 / context_size))
 bar_width=15
 filled=$((context_percent * bar_width / 100))
 empty=$((bar_width - filled))
-bar="$(printf '%*s' "$filled" '' | tr ' ' '█')$(printf '%*s' "$empty" '' | tr ' ' '░')"
+if [ "$(uname)" = "Darwin" ]; then
+    bar="$(printf '%*s' "$filled" '' | tr ' ' '█')$(printf '%*s' "$empty" '' | tr ' ' '░')"
+else
+    bar="$(printf '%*s' "$filled" '' | tr ' ' '#')$(printf '%*s' "$empty" '' | tr ' ' '-')"
+fi
 
 # Get directory name (basename)
 dir_name=$(basename "$current_dir")
