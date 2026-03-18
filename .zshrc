@@ -27,7 +27,7 @@ plugins=(
 
 # Load Oh My Zsh
 export ZSH="$HOME/.oh-my-zsh"
-if [[ -d "$ZSH" ]]; then
+if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
     source "$ZSH/oh-my-zsh.sh"
 fi
 
@@ -105,3 +105,7 @@ setopt HIST_VERIFY
 
 # Enable 256 colors
 export TERM="xterm-256color"
+export PATH="$HOME/.npm-global/bin:$PATH"
+
+# OpenClaw Completion
+source "/home/claw/.openclaw/completions/openclaw.zsh"
