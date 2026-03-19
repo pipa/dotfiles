@@ -296,26 +296,26 @@ else
 fi
 
 # ═══════════════════════════════════════════
-# LazyVim
-# ═══════════════════════════════════════════
-install_lazyvim() {
-    local nvim_config="$REAL_HOME/.config/nvim"
-    mkdir -p "$nvim_config"
-    rm -rf "$nvim_config/.git"
-    git clone --depth 1 https://github.com/LazyVim/starter "$nvim_config"
-    rm -rf "$nvim_config/.git"
-}
-
-if [[ -f "$REAL_HOME/.config/nvim/init.lua" ]]; then
-    RESULTS+=("${GREEN}✓${RESET} LazyVim ${DIM}(already installed)${RESET}")
-else
-    run_step "Installing LazyVim" install_lazyvim
-fi
-
-# ═══════════════════════════════════════════
 # Dotfiles — symlinks
 # ═══════════════════════════════════════════
 run_step "Linking dotfiles" bash "$DOTFILES_DIR/scripts/link.sh"
+
+# ═══════════════════════════════════════════
+# lazy.nvim — pre-install so first nvim launch just works
+# ═══════════════════════════════════════════
+install_lazy_nvim() {
+    local lazypath="$REAL_HOME/.local/share/nvim/lazy/lazy.nvim"
+    if [[ ! -d "$lazypath" ]]; then
+        sudo -u "$REAL_USER" git clone --filter=blob:none --branch=stable --quiet \
+            https://github.com/folke/lazy.nvim.git "$lazypath"
+    fi
+}
+
+if [[ -d "$REAL_HOME/.local/share/nvim/lazy/lazy.nvim" ]]; then
+    RESULTS+=("${GREEN}✓${RESET} lazy.nvim ${DIM}(already installed)${RESET}")
+else
+    run_step "Installing lazy.nvim" install_lazy_nvim
+fi
 
 # ═══════════════════════════════════════════
 # Default shell — zsh
