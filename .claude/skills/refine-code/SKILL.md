@@ -1,3 +1,8 @@
+---
+description: Stress-test a technical/coding idea by spinning up engineering persona agents that debate from different perspectives
+user-invocable: true
+---
+
 # Refine Code — Technical Idea Refinement Through Engineering Debate
 
 Take a technical/coding idea from the user and stress-test it by spinning up engineering agents with relevant personas. The agents adapt to the nature of the idea — different tasks get different experts.

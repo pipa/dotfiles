@@ -1,3 +1,8 @@
+---
+description: Generate a polished, markdown-formatted pull request description for the current branch
+user-invocable: true
+---
+
 # PR Description Skill
 
 Generate a polished, markdown-formatted pull request description for the current branch.

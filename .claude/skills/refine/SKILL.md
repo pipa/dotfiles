@@ -1,3 +1,8 @@
+---
+description: Stress-test an idea through structured Bull/Bear/Builder debate with parallel agents and web research
+user-invocable: true
+---
+
 # Refine — Idea Refinement Through Structured Debate
 
 Take an idea from the user and stress-test it by running parallel agents that argue different perspectives, then synthesize the results into a refined version of the idea.
