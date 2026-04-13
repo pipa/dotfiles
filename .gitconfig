@@ -100,8 +100,8 @@
 	helper = cache --timeout=3600
 	helper = !git credential-manager-core get, git credential-manager-core store
 
-[url "git@github.com:"]
-	insteadOf = https://github.com/
+[includeIf "gitdir/i:/Users/"]
+	path = ~/.gitconfig-macos
 
 [includeIf "gitdir:~/work/"]
 	path = ~/.gitconfig-work

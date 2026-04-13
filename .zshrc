@@ -70,11 +70,6 @@ export LESS_TERMCAP_so=$'\e[1;44;33m'
 export LESS_TERMCAP_ue=$'\e[0m'
 export LESS_TERMCAP_us=$'\e[1;32m'
 
-# Doppler - load ANTHROPIC_API_KEY
-if command -v doppler &> /dev/null; then
-    eval "$(doppler run --print-env -- nop 2>/dev/null)" || true
-fi
-
 # Set default language
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
@@ -106,6 +101,3 @@ setopt HIST_VERIFY
 # Enable 256 colors
 export TERM="xterm-256color"
 export PATH="$HOME/.npm-global/bin:$PATH"
-
-# OpenClaw Completion
-source "/home/claw/.openclaw/completions/openclaw.zsh"

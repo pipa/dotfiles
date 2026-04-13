@@ -1,0 +1,6 @@
+# macOS-only git settings — included via [includeIf "gitdir/i:/Users/"] in .gitconfig
+# Rewrites HTTPS GitHub URLs to SSH so `git clone https://github.com/...` uses your key.
+# Not applied on Linux servers where HTTPS clones must work without SSH auth.
+
+[url "git@github.com:"]
+	insteadOf = https://github.com/

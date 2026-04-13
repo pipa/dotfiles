@@ -7,7 +7,8 @@ if [[ -z "$DOTFILES_DIR" ]]; then
 fi
 
 # Use REAL_HOME if exported by setup.sh, otherwise fall back to HOME
-REAL_HOME="${REAL_HOME:-$REAL_HOME}"
+REAL_HOME="${REAL_HOME:-$HOME}"
+REAL_USER="${REAL_USER:-$(whoami)}"
 
 echo "Linking dotfiles to home directory..."
 
@@ -29,12 +30,19 @@ link_file() {
     # Create symlink
     echo "  Linking: $source -> $target"
     ln -sf "$source" "$target"
+
+    # Fix ownership when running as root via sudo — symlink and parent dir must belong to real user
+    if [[ "$(whoami)" == "root" && "$REAL_USER" != "root" ]]; then
+        chown -h "$REAL_USER:$REAL_USER" "$target" 2>/dev/null || true
+        chown "$REAL_USER:$REAL_USER" "$target_dir" 2>/dev/null || true
+    fi
 }
 
 # Link dotfiles
 link_file "$DOTFILES_DIR/.zshrc" "$REAL_HOME/.zshrc"
 link_file "$DOTFILES_DIR/.aliases" "$REAL_HOME/.aliases"
 link_file "$DOTFILES_DIR/.gitconfig" "$REAL_HOME/.gitconfig"
+link_file "$DOTFILES_DIR/.gitconfig-macos" "$REAL_HOME/.gitconfig-macos"
 link_file "$DOTFILES_DIR/.config/starship.toml" "$REAL_HOME/.config/starship.toml"
 link_file "$DOTFILES_DIR/.config/nvim" "$REAL_HOME/.config/nvim"
 link_file "$DOTFILES_DIR/.claude/settings.json" "$REAL_HOME/.claude/settings.json"

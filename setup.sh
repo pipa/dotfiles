@@ -182,11 +182,20 @@ fi
 # ═══════════════════════════════════════════
 # Shell — Oh My Zsh
 # ═══════════════════════════════════════════
-if [[ -d "$REAL_HOME/.oh-my-zsh" ]]; then
+install_omz() {
+    # Must run as REAL_USER with correct HOME — installer clones to ~/.oh-my-zsh
+    # RUNZSH=no prevents it spawning a new shell (which exits immediately in non-TTY)
+    # CHSH=no prevents it changing the default shell (we do that separately)
+    sudo -u "$REAL_USER" \
+        env HOME="$REAL_HOME" RUNZSH=no CHSH=no \
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
+        "" --unattended
+}
+
+if [[ -d "$REAL_HOME/.oh-my-zsh" && -f "$REAL_HOME/.oh-my-zsh/oh-my-zsh.sh" ]]; then
     RESULTS+=("${GREEN}✓${RESET} Oh My Zsh ${DIM}(already installed)${RESET}")
 else
-    run_step "Installing Oh My Zsh" \
-        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    run_step "Installing Oh My Zsh" install_omz
 fi
 
 # ═══════════════════════════════════════════
@@ -194,24 +203,17 @@ fi
 # ═══════════════════════════════════════════
 ZSH_CUSTOM="$REAL_HOME/.oh-my-zsh/custom"
 install_zsh_plugins() {
-    local changed=false
-    if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]]; then
-        git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
-        changed=true
-    fi
-    if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-completions" ]]; then
-        git clone https://github.com/zsh-users/zsh-completions "$ZSH_CUSTOM/plugins/zsh-completions"
-        changed=true
-    fi
-    if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]]; then
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
-        changed=true
-    fi
-    if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-autopair" ]]; then
-        git clone https://github.com/hlissner/zsh-autopair "$ZSH_CUSTOM/plugins/zsh-autopair"
-        changed=true
-    fi
-    $changed || return 0
+    # Clone as REAL_USER so plugin dirs are owned correctly
+    local clone_as="sudo -u $REAL_USER git clone --quiet"
+    [[ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]] && \
+        $clone_as https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
+    [[ ! -d "$ZSH_CUSTOM/plugins/zsh-completions" ]] && \
+        $clone_as https://github.com/zsh-users/zsh-completions "$ZSH_CUSTOM/plugins/zsh-completions"
+    [[ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]] && \
+        $clone_as https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
+    [[ ! -d "$ZSH_CUSTOM/plugins/zsh-autopair" ]] && \
+        $clone_as https://github.com/hlissner/zsh-autopair "$ZSH_CUSTOM/plugins/zsh-autopair"
+    return 0
 }
 
 if [[ -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" && \
@@ -234,16 +236,53 @@ else
 fi
 
 # ═══════════════════════════════════════════
-# Node.js — fnm
+# fzf
 # ═══════════════════════════════════════════
-if command -v fnm &> /dev/null; then
-    RESULTS+=("${GREEN}✓${RESET} fnm ${DIM}(already installed)${RESET}")
+install_fzf() {
+    sudo -u "$REAL_USER" git clone --depth=1 --quiet https://github.com/junegunn/fzf.git "$REAL_HOME/.fzf"
+    sudo -u "$REAL_USER" env HOME="$REAL_HOME" "$REAL_HOME/.fzf/install" --all --no-bash --no-fish --no-update-rc
+}
+
+if [[ -f "$REAL_HOME/.fzf/bin/fzf" ]]; then
+    RESULTS+=("${GREEN}✓${RESET} fzf ${DIM}(already installed)${RESET}")
 else
-    run_step "Installing fnm" \
-        sh -c "curl -fsSL https://fnm.vercel.app/install | bash"
+    run_step "Installing fzf" install_fzf
 fi
 
-export PATH="$HOME/.local/share/fnm:$REAL_HOME/.local/share/fnm:$PATH"
+# ═══════════════════════════════════════════
+# zoxide
+# ═══════════════════════════════════════════
+install_zoxide() {
+    sudo -u "$REAL_USER" \
+        env HOME="$REAL_HOME" \
+        sh -c "curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash"
+}
+
+if [[ -f "$REAL_HOME/.local/bin/zoxide" ]]; then
+    RESULTS+=("${GREEN}✓${RESET} zoxide ${DIM}(already installed)${RESET}")
+else
+    run_step "Installing zoxide" install_zoxide
+fi
+
+# ═══════════════════════════════════════════
+# Node.js — fnm
+# ═══════════════════════════════════════════
+FNM_DIR="$REAL_HOME/.local/share/fnm"
+install_fnm() {
+    # Install as REAL_USER to REAL_HOME — avoids root's home getting fnm
+    # --skip-shell: don't touch shell configs, .zshrc already handles eval "$(fnm env)"
+    sudo -u "$REAL_USER" \
+        env HOME="$REAL_HOME" \
+        sh -c "curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir '$FNM_DIR' --skip-shell"
+}
+
+if [[ -f "$FNM_DIR/fnm" ]]; then
+    RESULTS+=("${GREEN}✓${RESET} fnm ${DIM}(already installed)${RESET}")
+else
+    run_step "Installing fnm" install_fnm
+fi
+
+export PATH="$FNM_DIR:$PATH"
 if command -v fnm &> /dev/null; then
     eval "$(fnm env --shell bash)"
 fi
@@ -252,12 +291,9 @@ fi
 # Node.js — LTS + pnpm
 # ═══════════════════════════════════════════
 install_node_and_pnpm() {
-    fnm install --lts
-    fnm default lts-latest
-    fnm use lts-latest
-    if ! command -v pnpm &> /dev/null; then
-        npm install -g pnpm
-    fi
+    sudo -u "$REAL_USER" \
+        env HOME="$REAL_HOME" PATH="$FNM_DIR:$PATH" \
+        bash -c 'eval "$(fnm env --shell bash)" && fnm install --lts && fnm default lts-latest && fnm use lts-latest && npm install -g pnpm --quiet'
 }
 run_step "Installing Node.js & pnpm" install_node_and_pnpm
 
