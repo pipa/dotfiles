@@ -32,6 +32,7 @@ brew "lazygit"
 brew "btop"
 brew "zoxide"
 brew "tldr"
+brew "tmux"
 
 # Docker
 brew "docker"
@@ -44,3 +45,9 @@ brew "tree-sitter"
 
 # Doppler
 brew "doppler"
+
+# Fonts
+cask "font-jetbrains-mono-nerd-font"
+
+# Window/automation
+cask "hammerspoon"

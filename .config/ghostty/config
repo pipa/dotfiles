@@ -1,0 +1,26 @@
+# Font
+font-family = JetBrainsMono Nerd Font
+font-size = 14
+
+# Theme
+theme = Catppuccin Mocha
+
+# Window
+background-opacity = 0.9
+window-padding-x = 10
+window-padding-y = 8
+window-save-state = always
+macos-titlebar-style = tabs
+
+# Behavior
+mouse-hide-while-typing = true
+confirm-close-surface = false
+copy-on-select = false
+scrollback-limit = 10000000
+
+# Shell integration
+shell-integration = zsh
+shell-integration-features = cursor,sudo,title
+
+# Keybinds
+keybind = cmd+shift+m=toggle_maximize

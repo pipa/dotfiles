@@ -81,6 +81,13 @@ export PATH="/usr/local/bin:$PATH"
 [[ -d "/opt/nvim-linux-x86_64/bin" ]] && export PATH="/opt/nvim-linux-x86_64/bin:$PATH"
 [[ -d "/opt/nvim-macos-arm64/bin" ]] && export PATH="/opt/nvim-macos-arm64/bin:$PATH"
 
+# SSH agent stable path — fixes stale SSH_AUTH_SOCK in long-lived tmux panes
+# after reconnecting over SSH. No-op for local sessions.
+if [[ -n "$SSH_CONNECTION" && -S "$SSH_AUTH_SOCK" && ! -L "$SSH_AUTH_SOCK" ]]; then
+    ln -sf "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
+    export SSH_AUTH_SOCK="$HOME/.ssh/ssh_auth_sock"
+fi
+
 # Enable color support
 export CLICOLOR=1
 export LSCOLORS=ExFxBxDxCxegedabagacad
